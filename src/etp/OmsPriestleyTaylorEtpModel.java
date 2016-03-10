@@ -19,7 +19,6 @@ package etp;
 
 import static org.jgrasstools.gears.libs.modules.JGTConstants.isNovalue;
 
-
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -54,17 +53,17 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 	@Description("The net Radiation at the grass surface in W/m2 for the current hour.")
 	@In
 	@Unit("Watt m-2 ")
-	public HashMap<Integer, double[]> inNetRadiation;
+	public HashMap<Integer, double[]> inNetradiation;
 
 	@Description("The daily net Radiation default value in case of missing data.")
 	@In
 	@Unit("Watt m-2")
-	public double defaultDailyNetRadiation = 300.0;
+	public double defaultDailyNetradiation = 300.0;
 
 	@Description("The hourly net Radiation default value in case of missing data.")
 	@In
 	@Unit("Watt m-2")
-	public double defaultHourlyNetRadiation = 100.0;
+	public double defaultHourlyNetradiation = 100.0;
 
 	@Description("Switch that defines if it is hourly.")
 	@In
@@ -126,97 +125,87 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 		// iterate over the station
 		for( Entry<Integer, double[]> entry : entrySet ) {
 			Integer basinId = entry.getKey();
+			 double temp = defaultTemp;
+	            double t = entry.getValue()[0];
+	            if (!isNovalue(t)) {
+	                temp = t;
+	            }
 
-			double temperature = entry.getValue()[0];
-			if (!isNovalue(temperature)) {
-				temperature=defaultTemp;
-			}
+	            double netradiation = 0;
+	            if (doHourly == true) {
+	                netradiation = defaultHourlyNetradiation * 0.0864 / 24.0;
+	            } else {
+	                netradiation = defaultDailyNetradiation * 0.0864;
+	            }
+	            if (inNetradiation != null) {
+	                double n = inNetradiation.get(basinId)[0];
+	                if (!isNovalue(n)) {
+	                    if (doHourly == true) {
+	                        netradiation = n * 0.0864 / 24.0;
+	                    } else {
+	                        netradiation = n * 0.0864;
+	                    }
+	                }
+	            }
 
-			double NetRad = 0;
-			// NetRad must be converted in MJ/(m2 d) or  MJ/(m2 h)
-			if (doHourly == true) {
-				NetRad = defaultHourlyNetRadiation * 0.0864 / 24.0;
-			} else {
-				NetRad = defaultDailyNetRadiation * 0.0864;
-			}
-			if (inNetRadiation != null) {
-				double n = inNetRadiation.get(basinId)[0];
-				if (!isNovalue(n)) {
-					if (doHourly == true) {
-						NetRad = n * 0.0864 / 24.0;
-					} else {
-						NetRad = n * 0.0864;
-					}
-				}
-			}
+	            double pressure = defaultPressure;
+	            if (inPressure != null) {
+	                double p = inPressure.get(basinId)[0];
+	                if (isNovalue(p)) {
+	                    pressure = defaultPressure;
+	                } else {
+	                    pressure = p;
+	                }
+	            }
 
+	            DateTime currentDatetime = formatter.parseDateTime(tCurrent);
+	            int ora = currentDatetime.getHourOfDay();
+	            boolean isLigth = false;
+	            if (ora > 6 && ora < 18) {
+	                isLigth = true;
+	            }
 
-			if (inPressure != null) {
-				double pressure = inPressure.get(basinId)[0];
-				if (isNovalue(pressure)) {
-					pressure = defaultPressure;
+	            double etp = compute(pGmorn, pGnight, pAlpha, netradiation, temp, pressure, isLigth, doHourly);
+	            outPTEtp.put(basinId, new double[]{etp});
+	        }
+	    }
 
-				}
+	    private double compute( double ggm, double ggn, double alpha, double NetRad, double AirTem, double AtmPres, boolean islight,
+	            boolean ishourlyo ) {
+	        double result = 0;
+	        if (ishourlyo == true) {
+	            double den_Delta = (AirTem + 237.3) * (AirTem + 237.3);
+	            double exp_Delta = (17.27 * AirTem) / (AirTem + 237.3);
+	            double num_Delta = 4098 * (0.6108 * Math.exp(exp_Delta));
+	            double Delta = num_Delta / den_Delta;
 
-				// to detect if it is day or night 
-				DateTime currentDatetime = formatter.parseDateTime(tCurrent);
-				int ora = currentDatetime.getHourOfDay();
-				boolean isLigth = false;
-				if (ora > 6 && ora < 18) {
-					isLigth = true;
-				}
+	            double lambda = 2.501 - 0.002361 * AirTem;
+	            double gamma = 0.001013 * AtmPres / (0.622 * lambda);
 
-				double etp = compute(NetRad, temperature, pressure, isLigth);
-				outPTEtp.put(basinId, new double[]{etp});
-			}
-		}
-	}
+	            double coeff_G;
+	            if (islight == true) {
+	                coeff_G = ggm;
+	            } else {
+	                coeff_G = ggn;
+	            }
 
-	private double compute(double NetRad, double temperature, double pressure, boolean islight) {
-		double result = 0;
-		if (doHourly == true) {
+	            double G = coeff_G * NetRad;
 
-			// Computation of Delta [KPa °C-1]
-			double den_Delta = (temperature + 237.3) * (temperature + 237.3);
-			double exp_Delta = (17.27 * temperature) / (temperature + 237.3);
-			double num_Delta = 4098 * (0.6108 * Math.exp(exp_Delta));
-			double Delta = num_Delta / den_Delta;
+	            result = (alpha) * Delta * (NetRad - G) / ((gamma + Delta) * lambda);
 
-			//The latent heat of vaporization, lambda (MJ kg-1)
-			double lambda = 2.501 - 0.002361 * temperature;
+	        } else {
+	            double den_Delta = (AirTem + 237.3) * (AirTem + 237.3);
+	            double exp_Delta = (17.27 * AirTem) / (AirTem + 237.3);
+	            double num_Delta = 4098 * (0.6108 * Math.exp(exp_Delta));
+	            double Delta = num_Delta / den_Delta;
 
-			// Computation of Psicrometric constant gamma[kPa °C-1]
-			double gamma = 0.001013 *pressure / (0.622 * lambda);
+	            double lambda = 2.501 - 0.002361 * AirTem;
+	            double gamma = 0.001013 * AtmPres / (0.622 * lambda);
 
-			//Computation of the crop leaf area index
-			double coeff_G;
-			if (islight == true) {
-				coeff_G = pGmorn;
-			} else {
-				coeff_G = pGnight;
-			}
+	            result = (alpha) * Delta * (NetRad) / ((gamma + Delta) * lambda);
 
-			// Computation of the soil heat flux
-			double G = coeff_G * NetRad;
-
-			// ptetp
-			result = (pAlpha) * Delta * (NetRad - G) / ((gamma + Delta) * lambda);
-
-		} else {
-			
-			// in case of daily data
-			double den_Delta = (temperature + 237.3) * (temperature + 237.3);
-			double exp_Delta = (17.27 * temperature) / (temperature + 237.3);
-			double num_Delta = 4098 * (0.6108 * Math.exp(exp_Delta));
-			double Delta = num_Delta / den_Delta;
-
-			double lambda = 2.501 - 0.002361 * temperature;
-			double gamma = 0.001013 *pressure / (0.622 * lambda);
-
-			result = (pAlpha) * Delta * (NetRad) / ((gamma + Delta) * lambda);
-
-		}
-		return result;
-	}
+	        }
+	        return result;
+	    }
 
 }

@@ -27,12 +27,10 @@ public class TestPriestleyTaylorModel extends HMTestCase {
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
 
         String inPathToNetRad ="resources/Input/NetRad.csv";
-		String inPathToHumidity ="resources/Input/H.csv";
 		String inPathToTemperature ="resources/Input/Taria.csv";
 		String pathToETP= "resources/Output/etp_PrestleyTaylor.csv";
 
         OmsTimeSeriesIteratorReader tempReader = getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
-        OmsTimeSeriesIteratorReader pressReader = getTimeseriesReader(inPathToHumidity, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader netradReader = getTimeseriesReader(inPathToNetRad, fId, startDate, endDate, timeStepMinutes);
         
         OmsTimeSeriesIteratorWriter writerETP = new OmsTimeSeriesIteratorWriter();
@@ -54,15 +52,12 @@ public class TestPriestleyTaylorModel extends HMTestCase {
 
             PTEtp.tCurrent = tempReader.tCurrent;
 
-            pressReader.nextRecord();
-            id2ValueMap = pressReader.outData;
-            PTEtp.inPressure = id2ValueMap;
 
             PTEtp.defaultPressure = 101.3;
 
             netradReader.nextRecord();
             id2ValueMap = netradReader.outData;
-            PTEtp.inNetRadiation = id2ValueMap;
+            PTEtp.inNetradiation = id2ValueMap;
 
             PTEtp.pAlpha = 1.06;
             PTEtp.pGmorn = 0.35;
@@ -84,7 +79,6 @@ public class TestPriestleyTaylorModel extends HMTestCase {
         }
 
         tempReader.close();
-        pressReader.close();
         netradReader.close();
         
     }
