@@ -3,11 +3,14 @@ package etpTest;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 
-
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
+
 import etp.OmsPriestleyTaylorEtpModel;
+
 import org.jgrasstools.hortonmachine.utils.HMTestCase;
 
 /**
@@ -34,6 +37,11 @@ public class TestPriestleyTaylorModel extends HMTestCase {
         OmsTimeSeriesIteratorReader netradReader = getTimeseriesReader(inPathToNetRad, fId, startDate, endDate, timeStepMinutes);
         
         OmsTimeSeriesIteratorWriter writerETP = new OmsTimeSeriesIteratorWriter();
+        
+		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
+		stationsReader.file = "resources/Input/stations.shp";
+		stationsReader.readFeatureCollection();
+		SimpleFeatureCollection stationsFC = stationsReader.geodata;
 
 	
 		writerETP.file = pathToETP;
@@ -43,6 +51,8 @@ public class TestPriestleyTaylorModel extends HMTestCase {
 
 
         OmsPriestleyTaylorEtpModel PTEtp = new OmsPriestleyTaylorEtpModel();
+        PTEtp.inStations = stationsFC;
+        PTEtp.fStationsid = "cat" ;
 
         while( tempReader.doProcess ) {
             tempReader.nextRecord();
@@ -50,7 +60,7 @@ public class TestPriestleyTaylorModel extends HMTestCase {
             HashMap<Integer, double[]> id2ValueMap = tempReader.outData;
             PTEtp.inTemp = id2ValueMap;
 
-            PTEtp.tCurrent = tempReader.tCurrent;
+            PTEtp.tStartDate=startDate;
 
 
             PTEtp.defaultPressure = 101.3;
