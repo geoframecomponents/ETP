@@ -166,8 +166,10 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 					temp = t;
 				}
 
-				double netradiation = defaultHourlyNetradiation;
+
+				double netradiation=defaultHourlyNetradiation;
 				if (inNetradiation != null) netradiation  = inNetradiation.get(idStations[i])[0];
+				netradiation=(isNovalue(netradiation))?defaultHourlyNetradiation:netradiation;
 				
 				if (!isNovalue(netradiation )) {
 					if (doHourly == true) {
@@ -194,7 +196,8 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 					isLigth = true;
 				}
 
-				double etp = (isNovalue(netradiation))?0:compute(pGmorn, pGnight, pAlpha, netradiation, temp, pressure, isLigth, doHourly);
+				double etp = (netradiation<0)?0:compute(pGmorn, pGnight, pAlpha, netradiation, temp, pressure, isLigth, doHourly);
+				etp=(etp<0)?0:etp;
 				outPTEtp.put((Integer) idStations[i], new double[]{etp});
 			}
 			step++;
