@@ -113,16 +113,6 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 	@In
 	public String tStartDate;
 	
-	@Description("The mean hourly air temperature.")
-	@In
-	public SimpleFeatureCollection inStations;
-	
-	@Description("The mean hourly air temperature.")
-	@In
-	public String fStationsid;
-
-	@Description(" The vetor containing the id of the station")
-	Object []idStations;
 	
 	@Description("the linked HashMap with the coordinate of the stations")
 	LinkedHashMap<Integer, Coordinate> stationCoordinates;
@@ -146,29 +136,20 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 		outPTEtp = new HashMap<Integer, double[]>();
 
 
-		// starting from the shp file containing the stations, get the coordinate
-		//of each station
-		stationCoordinates = getCoordinate(inStations, fStationsid);
+        Set<Entry<Integer, double[]>> entrySet = inTemp.entrySet();
+        for( Entry<Integer, double[]> entry : entrySet ) {
+            Integer basinId = entry.getKey();
 
-		//create the set of the coordinate of the station, so we can 
-		//iterate over the set
-		Set<Integer> stationCoordinatesIdSet = stationCoordinates.keySet();
-
-		// trasform the list of idStation into an array
-		idStations= stationCoordinatesIdSet.toArray();
-
-		// iterate over the list of the stations
-		for (int i=0;i<idStations.length;i++){
 
 				double temp = defaultTemp;
-				double t = inTemp.get(idStations[i])[0];
+				double t = inTemp.get( basinId)[0];
 				if (!isNovalue(t)) {
 					temp = t;
 				}
 
 
 				double netradiation=defaultHourlyNetradiation;
-				if (inNetradiation != null) netradiation  = inNetradiation.get(idStations[i])[0];
+				if (inNetradiation != null) netradiation  = inNetradiation.get( basinId)[0];
 				netradiation=(isNovalue(netradiation))?defaultHourlyNetradiation:netradiation;
 				
 				if (!isNovalue(netradiation )) {
@@ -182,7 +163,7 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 
 				double pressure = defaultPressure;
 				if (inPressure != null) {
-					double p = inPressure.get(idStations[i])[0];
+					double p = inPressure.get( basinId)[0];
 					if (isNovalue(p)) {
 						pressure = defaultPressure;
 					} else {
@@ -198,7 +179,7 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 
 				double etp = (netradiation<0)?0:compute(pGmorn, pGnight, pAlpha, netradiation, temp, pressure, isLigth, doHourly);
 				etp=(etp<0)?0:etp;
-				outPTEtp.put((Integer) idStations[i], new double[]{etp});
+				outPTEtp.put((Integer)  basinId, new double[]{etp});
 			}
 			step++;
 		}

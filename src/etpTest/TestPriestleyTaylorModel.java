@@ -38,10 +38,7 @@ public class TestPriestleyTaylorModel extends HMTestCase {
         
         OmsTimeSeriesIteratorWriter writerETP = new OmsTimeSeriesIteratorWriter();
         
-		OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
-		stationsReader.file = "resources/Input/stations.shp";
-		stationsReader.readFeatureCollection();
-		SimpleFeatureCollection stationsFC = stationsReader.geodata;
+
 
 	
 		writerETP.file = pathToETP;
@@ -51,8 +48,7 @@ public class TestPriestleyTaylorModel extends HMTestCase {
 
 
         OmsPriestleyTaylorEtpModel PTEtp = new OmsPriestleyTaylorEtpModel();
-        PTEtp.inStations = stationsFC;
-        PTEtp.fStationsid = "cat" ;
+
 
         while( tempReader.doProcess ) {
             tempReader.nextRecord();
