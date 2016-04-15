@@ -86,11 +86,11 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 	@Unit("m")
 	public double pAlpha = 0;
 
-	@Description("The g morning.")
+	@Description("The coefficient for the soil heat flux during daylight")
 	@In
 	public double pGmorn = 0;
 
-	@Description("The g nigth.")
+	@Description("The coefficient for the soil heat flux during nighttime")
 	@In
 	public double pGnight = 0;
 
@@ -222,30 +222,4 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 			return result;
 		}
 
-		/**
-		 * Gets the coordinate given the shp file and the field name in the shape with the coordinate of the station.
-		 *
-		 * @param collection is the shp file with the stations
-		 * @param idField is the name of the field with the id of the stations 
-		 * @return the coordinate of each station
-		 * @throws Exception the exception in a linked hash map
-		 */
-		private LinkedHashMap<Integer, Coordinate> getCoordinate(SimpleFeatureCollection collection, String idField)
-				throws Exception {
-			LinkedHashMap<Integer, Coordinate> id2CoordinatesMap = new LinkedHashMap<Integer, Coordinate>();
-			FeatureIterator<SimpleFeature> iterator = collection.features();
-			Coordinate coordinate = null;
-			try {
-				while (iterator.hasNext()) {
-					SimpleFeature feature = iterator.next();
-					int stationNumber = ((Number) feature.getAttribute(idField)).intValue();
-					coordinate = ((Geometry) feature.getDefaultGeometry()).getCentroid().getCoordinate();
-					id2CoordinatesMap.put(stationNumber, coordinate);
-				}
-			} finally {
-				iterator.close();
-			}
-
-			return id2CoordinatesMap;
-		}
-	}
+}
