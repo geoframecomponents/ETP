@@ -1,7 +1,7 @@
-package etpTest;
+package etpTestPointCase;
 
 
-import static org.junit.Assert.assertTrue;
+
 
 import java.net.URISyntaxException;
 
@@ -12,17 +12,19 @@ import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 
 import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
 import org.jgrasstools.gears.utils.math.NumericsUtilities;
-import etp.OmsFaoEtpDaily;
-
 import org.junit.*;
+
+import etpPointCase.OmsFaoEtpHourly;
+
+import static org.junit.Assert.assertTrue;
 /**
- * Test FAO daily evapotranspiration.
+ * Test FAO Hourly evapotranspiration.
  * 
  * @author Andrea Antonello (www.hydrologis.com)
  */
 @SuppressWarnings("nls")
-public class TestFaoEtpDaily {
-
+public class TestFaoEtpHourly{
+	
 	@Test
     public void Test() throws Exception {
 
@@ -32,62 +34,56 @@ public class TestFaoEtpDaily {
 
         String startDate = "2005-05-01 00:00";
         String endDate = "2005-05-02 00:00";
-        int timeStepMinutes = 1440;
+        int timeStepMinutes = 60;
         String fId = "ID";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
 
-        String inPathToTmax ="resources/Input/faoetpday_in_tmax.csv";
-        String inPathToTmin ="resources/Input/faoetpday_in_tmin.csv";
-        String inPathToWind ="resources/Input/faoetpday_in_wind.csv";
-        String inPathToRelativeHumidity ="resources/Input/faoetpday_in_rh.csv";
-        String inPathToNetRad ="resources/Input/faoetpday_in_rad.csv";
+        String inPathToTemperature ="resources/Input/faoetphour_in_temp.csv";
+        String inPathToWind ="resources/Input/faoetphour_in_wind.csv";
+        String inPathToRelativeHumidity ="resources/Input/faoetphour_in_rh.csv";
+        String inPathToNetRad ="resources/Input/faoetphour_in_rad.csv";
 
-        OmsTimeSeriesIteratorReader maxtempReader = getTimeseriesReader(inPathToTmax, fId, startDate, endDate, timeStepMinutes);
-        OmsTimeSeriesIteratorReader mintempReader = getTimeseriesReader(inPathToTmin, fId, startDate, endDate, timeStepMinutes);
+        OmsTimeSeriesIteratorReader tempReader = getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader windReader = getTimeseriesReader(inPathToWind, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader humReader = getTimeseriesReader(inPathToRelativeHumidity, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader netradReader = getTimeseriesReader(inPathToNetRad, fId, startDate, endDate,
                 timeStepMinutes);
 
-        OmsFaoEtpDaily faoEtpDaily = new OmsFaoEtpDaily();
+        OmsFaoEtpHourly faoEtpHourly = new OmsFaoEtpHourly();
 
-        while( maxtempReader.doProcess ) {
-            maxtempReader.nextRecord();
+        while( tempReader.doProcess ) {
+            tempReader.nextRecord();
 
-            maxtempReader.nextRecord();
-            HashMap<Integer, double[]> id2ValueMap = maxtempReader.outData;
-            faoEtpDaily.inMaxTemp = id2ValueMap;
-
-            mintempReader.nextRecord();
-            id2ValueMap = mintempReader.outData;
-            faoEtpDaily.inMinTemp = id2ValueMap;
+            tempReader.nextRecord();
+            HashMap<Integer, double[]> id2ValueMap = tempReader.outData;
+            faoEtpHourly.inTemp = id2ValueMap;
 
             windReader.nextRecord();
             id2ValueMap = windReader.outData;
-            faoEtpDaily.inWind = id2ValueMap;
+            faoEtpHourly.inWind = id2ValueMap;
 
-            faoEtpDaily.defaultPressure = 101.3;
+            faoEtpHourly.defaultPressure = 101.3;
 
             humReader.nextRecord();
             id2ValueMap = humReader.outData;
-            faoEtpDaily.inRh = id2ValueMap;
+            faoEtpHourly.inRh = id2ValueMap;
 
             netradReader.nextRecord();
             id2ValueMap = netradReader.outData;
-            faoEtpDaily.inNetradiation = id2ValueMap;
+            faoEtpHourly.inNetradiation = id2ValueMap;
 
-            faoEtpDaily.pm = pm;
-            faoEtpDaily.process();
+            faoEtpHourly.pm = pm;
+            faoEtpHourly.process();
 
-            HashMap<Integer, double[]> outEtp = faoEtpDaily.outFaoEtp;
+            HashMap<Integer, double[]> outEtp = faoEtpHourly.outFaoEtp;
 
             double value = outEtp.get(1221)[0];
-            assertTrue(NumericsUtilities.dEq(value, 3.7612114870933824));
+            assertTrue(NumericsUtilities.dEq(value, 2.8583603700962774));
             break;
         }
 
-        maxtempReader.close();
+        tempReader.close();
         windReader.close();
         humReader.close();
         netradReader.close();
@@ -98,10 +94,10 @@ public class TestFaoEtpDaily {
             int timeStepMinutes ) throws URISyntaxException {
         OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
         reader.file = path;
-        reader.idfield = "ID";
-        reader.tStart = "2005-05-01 00:00";
-        reader.tTimestep = 1440;
-        reader.tEnd = "2005-05-02 00:00";
+        reader.idfield = id;
+        reader.tStart =startDate;
+        reader.tTimestep = timeStepMinutes;
+        reader.tEnd = endDate;
         reader.fileNovalue = "-9999";
         reader.initProcess();
         return reader;

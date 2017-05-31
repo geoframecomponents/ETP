@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package etp;
+package etpPointCase;
 
 import static java.lang.Math.exp;
 import static java.lang.Math.pow;
@@ -121,7 +121,7 @@ public class OmsFaoEtpDaily extends JGTModel {
 
         outFaoEtp = new HashMap<Integer, double[]>();
 
-        Set<Entry<Integer, double[]>> entrySet = inMaxTemp.entrySet();
+        Set<Entry<Integer, double[]>> entrySet = inNetradiation.entrySet();
         for( Entry<Integer, double[]> entry : entrySet ) {
             Integer basinId = entry.getKey();
 

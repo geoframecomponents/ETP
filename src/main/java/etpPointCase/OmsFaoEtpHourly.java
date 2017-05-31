@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package etp;
+package etpPointCase;
 
 import static org.jgrasstools.gears.libs.modules.JGTConstants.isNovalue;
 
@@ -134,7 +134,8 @@ public class OmsFaoEtpHourly extends JGTModel {
                 pressure = inPressure.get(basinId)[0] / 10.0;
             }
 
-            double rh = inRh.get(basinId)[0];
+            double rh = defaultRh;
+            if (inPressure != null) rh=inRh.get(basinId)[0];
             if (isNovalue(rh)) {
                 rh = defaultRh;
             }

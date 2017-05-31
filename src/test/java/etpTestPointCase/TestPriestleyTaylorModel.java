@@ -1,4 +1,4 @@
-package etpTest;
+package etpTestPointCase;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -6,10 +6,9 @@ import java.util.HashMap;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
-
-import etp.OmsPriestleyTaylorEtpModel;
-
 import org.junit.*;
+
+import etpPointCase.OmsPriestleyTaylorEtpModel;
 
 /**
  * Test PrestleyTaylorModel.
