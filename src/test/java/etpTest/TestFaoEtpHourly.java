@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
  * 
  * @author Andrea Antonello (www.hydrologis.com)
  */
-@SuppressWarnings("nls")
+//@SuppressWarnings("nls")
 public class TestFaoEtpHourly{
 	
 	@Test

@@ -36,16 +36,16 @@ import oms3.annotations.Out;
 import oms3.annotations.Status;
 import oms3.annotations.Unit;
 
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.feature.FeatureIterator;
+//import org.geotools.data.simple.SimpleFeatureCollection;
+//import org.geotools.feature.FeatureIterator;
 import org.jgrasstools.gears.libs.modules.JGTConstants;
 import org.jgrasstools.gears.libs.modules.JGTModel;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
-import org.opengis.feature.simple.SimpleFeature;
+//import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
+//import com.vividsolutions.jts.geom.Geometry;
 
 @Description("Calculate evapotraspiration based on the Priestley Taylor model")
 @Author(name = "Giuseppe Formetta, Silvia Franceschi and Andrea Antonello", contact = "maryban@hotmail.it")
@@ -220,6 +220,7 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 
 			}
 			return result;
+			//System.out.println(result);
 		}
 
 }

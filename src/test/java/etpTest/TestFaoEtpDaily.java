@@ -20,7 +20,7 @@ import org.junit.*;
  * 
  * @author Andrea Antonello (www.hydrologis.com)
  */
-@SuppressWarnings("nls")
+//@SuppressWarnings("nls")
 public class TestFaoEtpDaily {
 
 	@Test
