@@ -58,7 +58,7 @@ public class OmsPenmanMonteithETDaily extends JGTModel {
     @Description("The min temperature default value in case of missing data.")
     @In
     @Unit("C")
-    public double defaultMinTemp = 0.0;
+    public double defaultMinTemp = 15.0;
     ///////////
     @Description("The wind at the surface in km/hr for the current day.")
     @In
@@ -85,7 +85,7 @@ public class OmsPenmanMonteithETDaily extends JGTModel {
     @Description("The net Radiation default value in case of missing data.")
     @In
     @Unit("MJ m-2 day-1")
-    public double defaultNetradiation = 2.0;
+    public double defaultNetradiation = 30.0;
     ///////////
     @Description("The average atmospheric daily air pressure in hPa.")
     @In
@@ -128,20 +128,28 @@ public class OmsPenmanMonteithETDaily extends JGTModel {
             Integer basinId = entry.getKey();
             double maxTemperature = inMaxTemp.get(basinId)[0];
             if (maxTemperature == nullValue) {maxTemperature = defaultMaxTemp;}
-            double minTemperature = defaultMinTemp;
-            if (inMinTemp != null) {minTemperature = inMinTemp.get(basinId)[0];}
-            double relativeHumidity = defaultRelativeHumidity;
-            if (inRelativeHumidity != null) {relativeHumidity = inRelativeHumidity.get(basinId)[0];}
-            double netRadiation = defaultNetradiation;
-            if (inNetradiation != null) {netRadiation = inNetradiation.get(basinId)[0];}
-            double soilFlux = defaultSoilFlux;
-            if (inSoilFlux != null) {soilFlux = inSoilFlux.get(basinId)[0];}
-            double wind = defaultWind;
-            if (inWind != null) {wind = inWind.get(basinId)[0];}
-            double pressure = defaultPressure;
-            if (inPressure != null) {pressure = inPressure.get(basinId)[0];}
-            double zCentroid = defaultZCentroid;
-            if (inZCentroid != null) {zCentroid = inZCentroid.get(basinId)[0];}
+            
+            double minTemperature = inMinTemp.get(basinId)[0];
+            if (minTemperature  == nullValue) {minTemperature = defaultMinTemp;}
+            
+            double relativeHumidity = inRelativeHumidity.get(basinId)[0];
+            if (relativeHumidity  == nullValue) {relativeHumidity = defaultRelativeHumidity;}
+            
+            double netRadiation = inNetradiation.get(basinId)[0];
+            if (netRadiation  == nullValue) {netRadiation = defaultNetradiation;}
+            
+            double soilFlux = inSoilFlux.get(basinId)[0];
+            if (soilFlux  == nullValue) {soilFlux = defaultSoilFlux;}
+            
+            double wind = inWind.get(basinId)[0];
+            if (wind == nullValue) {wind = defaultWind;}
+            
+            double pressure = inPressure.get(basinId)[0];
+            if (pressure == nullValue) {pressure = defaultPressure;}
+            
+            double zCentroid = inZCentroid.get(basinId)[0];
+            if (zCentroid == nullValue) {zCentroid = defaultZCentroid;}
+            
             double etp = compute(maxTemperature, minTemperature, relativeHumidity, netRadiation, soilFlux, wind, pressure, zCentroid);
             outPMEtp.put(basinId, new double[]{etp});
         }

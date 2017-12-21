@@ -17,19 +17,19 @@ import org.junit.*;
 public class TestSchymanskiOrET{
 	@Test
     public void Test() throws Exception {
-		String startDate = "2005-05-01 00:00";
-        String endDate = "2005-05-02 00:00";
+		String startDate = "2016-06-01 00:00";
+        String endDate = "2016-06-10 00:00";
         int timeStepMinutes = 1440;
         String fId = "ID";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
 
-        String inPathToTemperature ="resources/Input/Temperature.csv";
-        String inPathToWind ="resources/Input/Wind.csv";
-        String inPathToRelativeHumidity ="resources/Input/RHumidity.csv";
-        String inPathToSWRad ="resources/Input/SWrad.csv";
-        String inPathToLWRad ="resources/Input/LWrad.csv";
-        String inPathToPressure ="resources/Input/Pressure.csv";
+        String inPathToTemperature 		="resources/Input/So/SoAirTemperature.csv";
+        String inPathToWind 			="resources/Input/So/SoWind.csv";
+        String inPathToRelativeHumidity ="resources/Input/So/SoRHumidity.csv";
+        String inPathToSWRad 			="resources/Input/So/SoSWrad.csv";
+        String inPathToLWRad 			="resources/Input/So/SoLWrad.csv";
+        String inPathToPressure 		="resources/Input/So/SoPressure.csv";
 
         OmsTimeSeriesIteratorReader temperatureReader = getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader windReader = getTimeseriesReader(inPathToWind, fId, startDate, endDate, timeStepMinutes);
@@ -42,15 +42,12 @@ public class TestSchymanskiOrET{
         while(temperatureReader.doProcess ) {
         	temperatureReader.nextRecord();
 
-            temperatureReader.nextRecord();
             HashMap<Integer, double[]> id2ValueMap = temperatureReader.outData;
             SoET.inAirTemperature = id2ValueMap;
 
             windReader.nextRecord();
             id2ValueMap = windReader.outData;
             SoET.inWindVelocity = id2ValueMap;
-
-            //SoET.defaultPressure = 101.3;
 
             humidityReader.nextRecord();
             id2ValueMap = humidityReader.outData;
@@ -93,7 +90,7 @@ public class TestSchymanskiOrET{
         reader.tStart =startDate;
         reader.tTimestep = timeStepMinutes;
         reader.tEnd = endDate;
-        reader.fileNovalue = "-9999";
+        reader.fileNovalue = "-9999.0";
         reader.initProcess();
         return reader;
     }

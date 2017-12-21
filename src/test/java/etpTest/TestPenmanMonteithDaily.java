@@ -18,19 +18,20 @@ public class TestPenmanMonteithDaily {
     public void Test() throws Exception {
         // PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.err);
         // URL rainUrl = this.getClass().getClassLoader().getResource("etp_in_data_rain.csv");
-        String startDate 	= "2005-05-01 00:00";
-        String endDate 	 	= "2005-05-12 00:00";
+    	String startDate	= "2016-06-01 00:00";
+        String endDate		= "2016-06-10 00:00";
         int timeStepMinutes = 60*24;
         String fId 			= "ID";
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
-        String inPathToTmax 			="resources/Input/etp/maxtemperature.csv";
-        String inPathToTmin				="resources/Input/etp/mintemperature.csv";
-        String inPathToWind 			="resources/Input/etp/wind.csv";
-        String inPathToRelativeHumidity ="resources/Input/etp/humidity.csv";
-        String inPathToNetRad 			="resources/Input/etp/radiation.csv";
-        String inPathToPressure 		="resources/Input/etp/pressure.csv";
-        String inPathToSoilFlux 		="resources/Input/etp/soilflux.csv";
-        String inPathToZC 				="resources/Input/etp/zcentroid.csv";
+       
+        String inPathToTmax 			="resources/Input/Pm/PmAirTemperature.csv";
+        String inPathToTmin				="resources/Input/Pm/PmAirTemperature.csv";
+        String inPathToWind 			="resources/Input/Pm/PmWind.csv";
+        String inPathToRelativeHumidity ="resources/Input/Pm/PmRHumidity.csv";
+        String inPathToNetRad 			="resources/Input/Pm/PmSWrad.csv";
+        String inPathToPressure 		="resources/Input/Pm/PmPressure.csv";
+        String inPathToSoilFlux 		="resources/Input/Pm/PmSoilFlux.csv";
+        String inPathToZC 				="resources/Input/Pm/PmZCentroid.csv";
         String pathOut 					="resources/Output/ET_penman.csv";
         
         OmsTimeSeriesIteratorReader maxtempReader = getTimeseriesReader(inPathToTmax, fId, startDate, endDate, timeStepMinutes);
@@ -46,16 +47,14 @@ public class TestPenmanMonteithDaily {
 		writerETP.file = pathOut;
 		writerETP.tStart = startDate;
 		writerETP.tTimestep = timeStepMinutes;
-		writerETP.fileNovalue="-9999";
+		writerETP.fileNovalue="-9999.0";
 
         OmsPenmanMonteithETDaily PMEtpDaily = new OmsPenmanMonteithETDaily();
 
         while( maxtempReader.doProcess ) {
             maxtempReader.nextRecord();
-            //maxtempReader.nextRecord();
             HashMap<Integer, double[]> id2ValueMap = maxtempReader.outData;
             PMEtpDaily.inMaxTemp = id2ValueMap;
-            //PMEtpDaily.tStartDate=startDate;
             mintempReader.nextRecord();
             id2ValueMap = mintempReader.outData;
             PMEtpDaily.inMinTemp = id2ValueMap;
@@ -106,7 +105,7 @@ public class TestPenmanMonteithDaily {
         reader.tStart = startDate;
         reader.tTimestep = 1440;
         reader.tEnd = endDate;
-        reader.fileNovalue = "-9999";
+        reader.fileNovalue = "-9999.0";
         reader.initProcess();
         return reader;
     }
