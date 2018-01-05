@@ -4,6 +4,8 @@ import java.util.HashMap;
 
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
+
+//import etp.Leaf;
 //import org.jgrasstools.gears.utils.math.NumericsUtilities;
 import etp.OmsSchymanskiOrET;
 import org.junit.*;
@@ -44,6 +46,13 @@ public class TestSchymanskiOrET{
 
             HashMap<Integer, double[]> id2ValueMap = temperatureReader.outData;
             SoET.inAirTemperature = id2ValueMap;
+            
+            SoET.leafLength = 0.05;	
+            SoET.leafSide = 2;	
+            SoET.leafEmissivity = 1.0;	
+            //SoET.leafTemperature = SoET.inAirTemperature + 2.0;
+			//double leafTemperature = leaf.temperature;   
+			
 
             windReader.nextRecord();
             id2ValueMap = windReader.outData;
