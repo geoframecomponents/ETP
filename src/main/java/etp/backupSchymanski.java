@@ -1,8 +1,6 @@
 package etp;
 import static java.lang.Math.exp;
 import static java.lang.Math.pow;
-//import static org.jgrasstools.gears.libs.modules.JGTConstants.isNovalue;
-//import static org.jgrasstools.gears.libs.modules.JGTConstants.isNovalue;
 import static java.lang.Math.abs;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -45,8 +43,7 @@ import org.jgrasstools.gears.libs.modules.JGTModel;
 @Name("")
 @Status(Status.CERTIFIED)
 @License("General Public License Version 3 (GPLv3)")
-public class OmsSchymanskiOrET extends JGTModel {
-		
+public class backupSchymanski extends JGTModel {
 	@Description("Air temperature.")
 	@In
 	@Unit("K")
@@ -61,9 +58,9 @@ public class OmsSchymanskiOrET extends JGTModel {
 	@Unit("m")
 	public double leafLength;
 	
-	@Description("Leaves side")
+	@Description("Leaves dimension")
 	@In
-	@Unit("")
+	@Unit("m^2")
 	public int leafSide;
 	
 	@Description("Leaves emissivity")
@@ -71,19 +68,19 @@ public class OmsSchymanskiOrET extends JGTModel {
 	@Unit(" ")
 	public double leafEmissivity;
 	
-	@Description("Leaves temperature")
+	@Description("Leaves temeprature")
 	@In
 	@Unit("K")
 	public double leafTemperature;
 	
 	@Description("The wind speed.")
 	@In
-	@Unit("m s-1")
+	@Unit("km hr-1")
 	public HashMap<Integer, double[]> inWindVelocity;
 	@Description("The wind default value in case of missing data.")
 	@In
-	@Unit("m s-1")
-	public double defaultWindVelocity = 2.0;
+	@Unit("km hr-1")
+	public double defaultWindVelocity = 5.0;
 	
 	@Description("The air relative humidity.")
 	@In
@@ -101,7 +98,7 @@ public class OmsSchymanskiOrET extends JGTModel {
 	@Description("The short wave radiation default value in case of missing data.")
 	@In
 	@Unit("W m-2")
-	public double defaultShortWaveRadiation = 0.0;
+	public double defaultShortWaveRadiation = 30.0;
 	
 	@Description("The long wave radiation at the surface.")
 	@In
@@ -114,12 +111,12 @@ public class OmsSchymanskiOrET extends JGTModel {
 	
 	@Description("The atmospheric pressure.")
 	@In
-	@Unit("Pa")
+	@Unit("hPa")
 	public HashMap<Integer, double[]> inAtmosphericPressure;
 	@Description("The atmospheric pressure default value in case of missing data.")
 	@In
-	@Unit("Pa")
-	public double defaultAtmosphericPressure = 101325.0;
+	@Unit("hPa")
+	public double defaultAtmosphericPressure = 100.0;
 	
 	@Description("The soilflux.")
 	@In
@@ -137,40 +134,21 @@ public class OmsSchymanskiOrET extends JGTModel {
 	@Description("The leaf area index default value in case of missing data.")
 	@In
 	@Unit("m2 m-2")
-	public double defaultLeafAreaIndex = 1.0;
-	
-	@Description("area.")
-	@In
-	@Unit("m2")
-	public double area;
-	
-	@Description("Switch that defines if it is hourly.")
-	@In
-	public boolean doHourly = true;
+	public double defaultLeafAreaIndex = 0.6;
 	
 	double waterMolarMass = 0.018;
 	double latentHeatEvaporation = 2.45 * pow(10,6);
 	double molarGasConstant = 8.314472;
 	double nullValue = -9999.0;
 	double stefanBoltzmannConstant = 5.670373 * pow(10,-8);
-	public int time;
 	
 	@Description("The reference evapotranspiration.")
 	@Unit("mm day-1")
 	@Out
 	public HashMap<Integer, double[]> outSOEt;
-	@Description("The reference evapotranspiration.")
-	@Unit("mm day-1")
-	@Out
-	public HashMap<Integer, double[]> outSOLT;
 	@Execute
-	
 	public void process() throws Exception {
-		//DateTime startDateTime = formatter.parseDateTime(tStartDate);
-		//DateTime date=(doHourly==false)?startDateTime.plusDays(step):startDateTime.plusHours(step).plusMinutes(30); 
-		
 		outSOEt = new HashMap<Integer, double[]>();
-		outSOLT = new HashMap<Integer, double[]>();
 		Set<Entry<Integer, double[]>> entrySet = inAirTemperature.entrySet();
 		for( Entry<Integer, double[]> entry : entrySet ) {
 			Integer basinId = entry.getKey();    
@@ -180,23 +158,19 @@ public class OmsSchymanskiOrET extends JGTModel {
 			double airTemperature = inAirTemperature.get(basinId)[0]+273.0;
 			if (airTemperature == (nullValue+273.0)) {airTemperature = defaultAirTemperature;}		
 			
-			if (doHourly == true) {
-				time =3600;
-				} else {
-				time = 86400;
-				}
 			leafTemperature = airTemperature + 2.0;   
-			double leafAbsorption = 0.8;	//double leafTransmittance = 0.1;
-			//int numberOfLayers = 3; 
-			//double area = 1.0;
-			//double absorbedRadiation = new double[numberOfLayers]; //double transmittedRadiation[] = new double[numberOfLayers];
+			double leafAbsorption = 0.8;	double leafTransmittance = 0.1;
+			int numberOfLayers = 3; 
+			double area = 1.0;
+			double absorbedRadiation[] = new double[numberOfLayers]; //double transmittedRadiation[] = new double[numberOfLayers];
 							
 			 
 			double shortWaveRadiation = inShortWaveRadiation.get(basinId)[0];
 			if (shortWaveRadiation == nullValue) {shortWaveRadiation = defaultShortWaveRadiation;}   
 			
-			double absorbedRadiation = shortWaveRadiation * leafAbsorption; //double transmittedRadiation[] = new double[numberOfLayers];
-
+			int i;
+			for(i=0;i>absorbedRadiation.length;i++)
+				absorbedRadiation[i]=shortWaveRadiation*(leafAbsorption*pow(leafTransmittance,i));	
 			
 			double longWaveRadiation = inLongWaveRadiation.get(basinId)[0];
 			if (longWaveRadiation == nullValue) {longWaveRadiation = 1 * stefanBoltzmannConstant * pow (airTemperature, 4);}//defaultLongWaveRadiation;}
@@ -221,52 +195,32 @@ public class OmsSchymanskiOrET extends JGTModel {
 			double sensibleHeatTransferCoefficient = cH.computeSensibleHeatTransferCoefficient(convectiveTransferCoefficient, leafSide);
 			double latentHeatTransferCoefficient = cE.computeLatentHeatTransferCoefficient(airTemperature, atmosphericPressure, leafSide, convectiveTransferCoefficient);
 			
-			shortWaveRadiation = absorbedRadiation;
+			//numberOfLayers
+			if(leafAreaIndex < 1) {
+				numberOfLayers = 1;
+			} 
+			for(i=0;i<numberOfLayers;i++)
+				//absorbedRadiation[i]=shortWaveRadiation*(leafAbsorption*pow(leafTransmittance,i));
+				shortWaveRadiation = absorbedRadiation[i];
+			
+			double ET = 0;
 			double residual = 1.0;
 			double latentHeatFlux = 0;
 			double sensibleHeatFlux = 0;
 			double netLongWaveRadiation = 0;
-			double leafTemperatureSun = leafTemperature;
-			double ETsun = 0;
-			double ETshadow = 0;
 			while(abs(residual) > pow(10,-1)) 
 				{
-				//deltaLeaf = computeDeltaLeaf(leafTemperatureSun, airTemperature);
-				sensibleHeatFlux = computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSun, airTemperature);
-				latentHeatFlux = computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-				netLongWaveRadiation = computeNetLongWaveRadiation(leafSide,leafEmissivity, airTemperature, leafTemperatureSun);
+				sensibleHeatFlux = computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperature, airTemperature);
+				latentHeatFlux = computeLatentHeatFlux(delta, leafTemperature, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
+				netLongWaveRadiation = computeNetLongWaveRadiation(leafSide,leafEmissivity, airTemperature, leafTemperature);
 				residual = (shortWaveRadiation - netLongWaveRadiation) - sensibleHeatFlux - latentHeatFlux;
-				leafTemperatureSun = computeLeafTemperature(leafSide, leafEmissivity,sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
+				leafTemperature = computeLeafTemperature(leafSide, leafEmissivity,sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
 				}
-			ETsun = computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-			outSOLT.put(basinId, new double[]{leafTemperatureSun});
-
-			if (leafAreaIndex >1.0) {
-				
-				
-			shortWaveRadiation = absorbedRadiation*0.2;
-			double residualSh = 1.0;
-			double latentHeatFluxSh = 0;
-			double sensibleHeatFluxSh = 0;
-			double netLongWaveRadiationSh = 0;
-			double leafTemperatureSh = leafTemperature;
+			ET = ET + latentHeatFlux * area*(leafAreaIndex/numberOfLayers);
+			outSOEt.put(basinId, new double[]{ET});
 			
-			while(abs(residualSh) > pow(10,-1)) 
-				{
-				sensibleHeatFluxSh = computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSh, airTemperature);
-				latentHeatFluxSh = computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-				netLongWaveRadiationSh = computeNetLongWaveRadiation(leafSide,leafEmissivity, airTemperature, leafTemperatureSh);
-				residualSh = (shortWaveRadiation- netLongWaveRadiationSh) - sensibleHeatFluxSh - latentHeatFluxSh;
-				leafTemperatureSh = computeLeafTemperature(leafSide, leafEmissivity,sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
-				}
-			ETshadow = computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
 			}
-			//double ETout = (ETsun*area + ETshadow*(leafAreaIndex-area))*time/latentHeatEvaporation;
-			//System.out.print(ETout);
-			outSOEt.put(basinId, new double[]{(((2.0*ETsun) + (ETshadow*(leafAreaIndex-2.0*area)))*time/latentHeatEvaporation)});
-			}
-			}
-		//}
+		}
 	private double computeSaturationVaporPressure(double airTemperature) {
 		 // Computation of the saturation vapor pressure at air temperature [Pa]
 		double saturationVaporPressure = 611.0 * exp((waterMolarMass*latentHeatEvaporation/molarGasConstant)*((1.0/273.0)-(1.0/airTemperature)));
@@ -281,14 +235,6 @@ public class OmsSchymanskiOrET extends JGTModel {
 		double delta = numerator * exponential / denominator;
 		return delta;
 	}
-	//private double computeDeltaLeaf (double airTemperature,double leafTemperature) {
-		// Computation of delta [Pa K-1]
-		// Slope of saturation vapor pressure at air temperature
-	//	double first = 611 * exp((waterMolarMass * latentHeatEvaporation / molarGasConstant)*((1/273.0)-(1/leafTemperature)));
-	//	double second = 611 * exp((waterMolarMass * latentHeatEvaporation / molarGasConstant)*((1/273.0)-(1/airTemperature)));
-	//	double deltaLeaf = (first - second)/(leafTemperature - airTemperature);
-	//	return deltaLeaf;
-	//}
 //	private double computeLongWaveRadiation(double side, double emissivity, double Temperature) {
 //		double longWaveRadiation = 4 * side * emissivity * stefanBoltzmannConstant * (pow (Temperature, 4));
 //		return longWaveRadiation;	
@@ -300,7 +246,7 @@ public class OmsSchymanskiOrET extends JGTModel {
 	}
 	private double computeLatentHeatFlux(double delta, double leafTemperature, double airTemperature, double latentHeatTransferCoefficient,double sensibleHeatTransferCoefficient, double vaporPressure, double saturationVaporPressure) {
 		 // Computation of the latent heat flux from leaf [J m-2 s-1]
-		double latentHeatFlux = (sensibleHeatTransferCoefficient* (delta * (leafTemperature - airTemperature) + saturationVaporPressure - vaporPressure))/(sensibleHeatTransferCoefficient/latentHeatTransferCoefficient);
+		double latentHeatFlux = sensibleHeatTransferCoefficient* (delta * (leafTemperature - airTemperature) + saturationVaporPressure - vaporPressure)/(sensibleHeatTransferCoefficient/latentHeatTransferCoefficient);
 		return latentHeatFlux;	
 	}
 	private double computeSensibleHeatFlux(double sensibleHeatTransferCoefficient, double leafTemperature, double airTemperature) {
@@ -308,6 +254,9 @@ public class OmsSchymanskiOrET extends JGTModel {
 		double sensibleHeatFlux = sensibleHeatTransferCoefficient * (leafTemperature - airTemperature);
 		return sensibleHeatFlux;	
 	}
+	
+	
+	
 	private double computeLeafTemperature(
 			double side,
 			double emissivity,
@@ -326,5 +275,9 @@ public class OmsSchymanskiOrET extends JGTModel {
 				side * emissivity * stefanBoltzmannConstant * 4 * pow(airTemperature,3)));
 		return leafTemperature;	
 	}
+
+	
+	
+		
 	}
 

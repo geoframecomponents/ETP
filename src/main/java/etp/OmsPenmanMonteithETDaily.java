@@ -62,12 +62,12 @@ public class OmsPenmanMonteithETDaily extends JGTModel {
     ///////////
     @Description("The wind at the surface in km/hr for the current day.")
     @In
-    @Unit("km hr-1")
+    @Unit("m s-1")
     public HashMap<Integer, double[]> inWind;
     @Description("The wind default value in case of missing data.")
     @In
-    @Unit("km hr-1")
-    public double defaultWind = 5.0;
+    @Unit("m s-1")
+    public double defaultWind = 2.0;
     ///////////
     @Description("The average air daily relative humidity.")
     @In
@@ -76,43 +76,39 @@ public class OmsPenmanMonteithETDaily extends JGTModel {
     @Description("The humidity default value in case of missing data.")
     @In
     @Unit("%")
-    public double defaultRelativeHumidity = 70.0;
+    public double defaultRelativeHumidity = 90.0;
     ////////////
     @Description("The net Radiation at the grass surface in W/m2 for the current day.")
     @In
-    @Unit("MJ m-2 day-1")
+    @Unit("J m-2 s-1")
     public HashMap<Integer, double[]> inNetradiation;
     @Description("The net Radiation default value in case of missing data.")
     @In
-    @Unit("MJ m-2 day-1")
+    @Unit("J m-2 s-1")
     public double defaultNetradiation = 30.0;
     ///////////
     @Description("The average atmospheric daily air pressure in hPa.")
     @In
-    @Unit("hPa")
+    @Unit("Pa")
     public HashMap<Integer, double[]> inPressure;
     @Description("The default average atmospheric daily air pressure in hPa.")
     @In
-    @Unit("hPa")
-    public double defaultPressure = 100.0;
+    @Unit("Pa")
+    public double defaultPressure = 100000.0;
     ///////////
     @Description("The average soilflux.")
     @In
-    @Unit("MJ m-2 day-1")
+    @Unit("J m-2 s-1")
     public HashMap<Integer, double[]> inSoilFlux;
     @Description("The default average atmospheric daily air pressure in hPa.")
     @In
-    @Unit("MJ m-2 day-1")
+    @Unit("J m-2 s-1")
     public double defaultSoilFlux = 0.0;
     ///////////
     @Description("The elevation of basin centroid.")
     @In
     @Unit("m")
-    public HashMap<Integer, double[]> inZCentroid;
-    @Description("The default elevation of the centroid.")
-    @In
-    @Unit("m")
-    public double defaultZCentroid = 250.0;  
+    
     double nullValue = -9999.0;
     ///////////
     // TODO Add the elevation value in case of missing P data
@@ -135,7 +131,7 @@ public class OmsPenmanMonteithETDaily extends JGTModel {
             double relativeHumidity = inRelativeHumidity.get(basinId)[0];
             if (relativeHumidity  == nullValue) {relativeHumidity = defaultRelativeHumidity;}
             
-            double netRadiation = inNetradiation.get(basinId)[0];
+            double netRadiation = inNetradiation.get(basinId)[0]*0.8;
             if (netRadiation  == nullValue) {netRadiation = defaultNetradiation;}
             
             double soilFlux = inSoilFlux.get(basinId)[0];
@@ -147,17 +143,15 @@ public class OmsPenmanMonteithETDaily extends JGTModel {
             double pressure = inPressure.get(basinId)[0];
             if (pressure == nullValue) {pressure = defaultPressure;}
             
-            double zCentroid = inZCentroid.get(basinId)[0];
-            if (zCentroid == nullValue) {zCentroid = defaultZCentroid;}
             
-            double etp = compute(maxTemperature, minTemperature, relativeHumidity, netRadiation, soilFlux, wind, pressure, zCentroid);
+            double etp = compute(maxTemperature, minTemperature, relativeHumidity, netRadiation, soilFlux, wind, pressure);
             outPMEtp.put(basinId, new double[]{etp});
         }
     }
-    private double compute(double maxTemperature,double minTemperature,double relativeHumidity,double netRadiation,double soilFlux,double wind,double pressure,double zCentroid) {
+    private double compute(double maxTemperature,double minTemperature,double relativeHumidity,double netRadiation,double soilFlux,double wind,double pressure) {
     	// Computation of Delta [KPa °C-1]
         double defaultGasConstant = 287.058;
-        double defaultSpecificHeat = 1.0035;
+        double defaultSpecificHeat = 1003.5;
         double defaultAeroResistance = 208;
         double defaultSurfResistance = 70;
         double meanTemperature = (maxTemperature + minTemperature) / 2.0;
@@ -166,11 +160,11 @@ public class OmsPenmanMonteithETDaily extends JGTModel {
         double expDeltaMax = (17.27 * maxTemperature) / (maxTemperature + 237.3);
         double expDeltaMin = (17.27 * minTemperature) / (minTemperature + 237.3);
         double numDelta = 4098 * (0.6108 * exp(expDelta));
-        double delta = numDelta / denDelta;
+        double delta = numDelta*1000 / denDelta;
         // End Computation of Delta
 
         // Computation of Psicrometric constant gamma[kPa °C-1]
-        double gamma = 0.665 * 0.001 * pressure;
+        double gamma = 0.000800 * pressure;
         // End Computation of Psicrometric constant gamma
 
         // Computation of mean saturation vapour pressure e0_AirTem [kPa]
@@ -180,7 +174,7 @@ public class OmsPenmanMonteithETDaily extends JGTModel {
         // End of computation of mean saturation vapour pressure e0_AirTem
 
         // Computation of average hourly actual vapour pressure ea [kPa]
-        double ea = 0;//Math.log((zCentroid - dHeight)/zMomentum)*Math.log((zCentroid - dHeight)/zHeat) / Math.pow(karmanConstant,2)*inWind;
+        double ea = es*relativeHumidity/100;//Math.log((zCentroid - dHeight)/zMomentum)*Math.log((zCentroid - dHeight)/zHeat) / Math.pow(karmanConstant,2)*inWind;
         // End of computation average hourly actual vapour pressure ea
 
         // Computation of Aerodynamic resistance [s m^-1]
@@ -190,7 +184,7 @@ public class OmsPenmanMonteithETDaily extends JGTModel {
 
         // compute the daily evapotranspiration in mm/day
         double firstTerm = delta * (netRadiation - soilFlux);
-        double density = pressure/ (meanTemperature * defaultGasConstant);
+        double density = pressure/ ((meanTemperature+273) * defaultGasConstant);
         double secondTerm = (density * defaultSpecificHeat) * ((es - ea) / defaultAeroResistance);
         double den = delta + gamma * (1 + defaultSurfResistance/defaultAeroResistance);
         double result = (firstTerm + secondTerm) / den;

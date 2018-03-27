@@ -19,19 +19,21 @@ import org.junit.*;
 public class TestSchymanskiOrET{
 	@Test
     public void Test() throws Exception {
-		String startDate = "2016-06-01 00:00";
-        String endDate = "2016-06-10 00:00";
-        int timeStepMinutes = 1440;
+		String startDate = "1994-06-22 05:00";
+        String endDate = "1994-06-22 12:00";
+        int timeStepMinutes = 60;
         String fId = "ID";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
 
-        String inPathToTemperature 		="resources/Input/So/SoAirTemperature.csv";
-        String inPathToWind 			="resources/Input/So/SoWind.csv";
-        String inPathToRelativeHumidity ="resources/Input/So/SoRHumidity.csv";
-        String inPathToSWRad 			="resources/Input/So/SoSWrad.csv";
-        String inPathToLWRad 			="resources/Input/So/SoLWrad.csv";
-        String inPathToPressure 		="resources/Input/So/SoPressure.csv";
+        String inPathToTemperature 		="resources/Input/Pm/airT_1.csv";
+        String inPathToWind 			="resources/Input/Pm/fake.csv";
+        String inPathToRelativeHumidity ="resources/Input/Pm/fake.csv";
+        String inPathToSWRad 			="resources/Input/Pm/total_1.csv";
+        String inPathToLWRad 			="resources/Input/Pm/fake.csv";
+        String inPathToPressure 		="resources/Input/Pm/fake.csv";
+        String inPathToLai 				="resources/Input/Pm/LAI_1.csv";
+       // String inPathToArea 			="resources/Input/So/SoArea.csv";
 
         OmsTimeSeriesIteratorReader temperatureReader = getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader windReader = getTimeseriesReader(inPathToWind, fId, startDate, endDate, timeStepMinutes);
@@ -39,6 +41,8 @@ public class TestSchymanskiOrET{
         OmsTimeSeriesIteratorReader shortwaveReader = getTimeseriesReader(inPathToSWRad, fId, startDate, endDate,timeStepMinutes);
         OmsTimeSeriesIteratorReader longwaveReader = getTimeseriesReader(inPathToLWRad, fId, startDate, endDate,timeStepMinutes);
         OmsTimeSeriesIteratorReader pressureReader = getTimeseriesReader(inPathToPressure, fId, startDate, endDate,timeStepMinutes);
+        OmsTimeSeriesIteratorReader laiReader = getTimeseriesReader(inPathToLai, fId, startDate, endDate,timeStepMinutes);
+        //OmsTimeSeriesIteratorReader areaReader = getTimeseriesReader(inPathToArea, fId, startDate, endDate,timeStepMinutes);
 
         OmsSchymanskiOrET SoET = new OmsSchymanskiOrET();
         while(temperatureReader.doProcess ) {
@@ -46,10 +50,12 @@ public class TestSchymanskiOrET{
 
             HashMap<Integer, double[]> id2ValueMap = temperatureReader.outData;
             SoET.inAirTemperature = id2ValueMap;
-            
+            SoET.doHourly = true;
+
             SoET.leafLength = 0.05;	
             SoET.leafSide = 2;	
             SoET.leafEmissivity = 1.0;	
+            SoET.area = 1.0;	
             //SoET.leafTemperature = SoET.inAirTemperature + 2.0;
 			//double leafTemperature = leaf.temperature;   
 			
@@ -73,7 +79,11 @@ public class TestSchymanskiOrET{
             pressureReader.nextRecord();
             id2ValueMap = pressureReader.outData;
             SoET.inAtmosphericPressure = id2ValueMap;
-                      
+            
+            laiReader.nextRecord();
+            id2ValueMap = laiReader.outData;
+            SoET.inLeafAreaIndex = id2ValueMap;
+            
             SoET.pm = pm;
             SoET.process();
 

@@ -15,13 +15,13 @@ import org.junit.*;
 public class TestPriestleyTaylorModel{
 	@Test
     public void Test() throws Exception {
-        String startDate = "2007-10-17 00:00";
-        String endDate = "2007-10-18 00:00";
+		String startDate = "1994-06-22 05:00";
+        String endDate = "1994-06-22 12:00";
         int timeStepMinutes = 60;
         String fId = "ID";
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
-        String inPathToNetRad ="resources/Input/NetRad.csv";
-		String inPathToTemperature ="resources/Input/Taria.csv";
+        String inPathToNetRad ="resources/Input/Pm/total_1.csv";
+		String inPathToTemperature ="resources/Input/Pm/airT_1.csv";
 		String pathToETP= "resources/Output/etp_PrestleyTaylor.csv";
         OmsTimeSeriesIteratorReader tempReader = getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader netradReader = getTimeseriesReader(inPathToNetRad, fId, startDate, endDate, timeStepMinutes);      

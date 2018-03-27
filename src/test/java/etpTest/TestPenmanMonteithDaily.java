@@ -18,20 +18,19 @@ public class TestPenmanMonteithDaily {
     public void Test() throws Exception {
         // PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.err);
         // URL rainUrl = this.getClass().getClassLoader().getResource("etp_in_data_rain.csv");
-    	String startDate	= "2016-06-01 00:00";
-        String endDate		= "2016-06-10 00:00";
-        int timeStepMinutes = 60*24;
+    	String startDate	= "1994-01-01 11:00";
+        String endDate		= "1994-01-01 23:00";
+        int timeStepMinutes = 60;
         String fId 			= "ID";
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
        
-        String inPathToTmax 			="resources/Input/Pm/PmAirTemperature.csv";
-        String inPathToTmin				="resources/Input/Pm/PmAirTemperature.csv";
-        String inPathToWind 			="resources/Input/Pm/PmWind.csv";
-        String inPathToRelativeHumidity ="resources/Input/Pm/PmRHumidity.csv";
-        String inPathToNetRad 			="resources/Input/Pm/PmSWrad.csv";
-        String inPathToPressure 		="resources/Input/Pm/PmPressure.csv";
-        String inPathToSoilFlux 		="resources/Input/Pm/PmSoilFlux.csv";
-        String inPathToZC 				="resources/Input/Pm/PmZCentroid.csv";
+        String inPathToTmax 			="resources/Input/Pm/airT_1.csv";
+        String inPathToTmin				="resources/Input/Pm/airT_1.csv";
+        String inPathToWind 			="resources/Input/Pm/fake.csv";
+        String inPathToRelativeHumidity ="resources/Input/Pm/fake.csv";
+        String inPathToNetRad 			="resources/Input/Pm/netRad_1.csv";
+        String inPathToPressure 		="resources/Input/Pm/fake.csv";
+        String inPathToSoilFlux 		="resources/Input/Pm/fake.csv";
         String pathOut 					="resources/Output/ET_penman.csv";
         
         OmsTimeSeriesIteratorReader maxtempReader = getTimeseriesReader(inPathToTmax, fId, startDate, endDate, timeStepMinutes);
@@ -41,7 +40,6 @@ public class TestPenmanMonteithDaily {
         OmsTimeSeriesIteratorReader netradReader  = getTimeseriesReader(inPathToNetRad, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader pressureReader= getTimeseriesReader(inPathToPressure, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader soilfluxReader= getTimeseriesReader(inPathToSoilFlux, fId, startDate, endDate, timeStepMinutes);
-        OmsTimeSeriesIteratorReader zcentroidReader= getTimeseriesReader(inPathToZC, fId, startDate, endDate, timeStepMinutes);
         
         OmsTimeSeriesIteratorWriter writerETP = new OmsTimeSeriesIteratorWriter();
 		writerETP.file = pathOut;
@@ -81,10 +79,7 @@ public class TestPenmanMonteithDaily {
             id2ValueMap = soilfluxReader.outData;
             PMEtpDaily.inSoilFlux = id2ValueMap;
             
-            zcentroidReader.nextRecord();
-            id2ValueMap = zcentroidReader.outData;
-            PMEtpDaily.inZCentroid = id2ValueMap;
-            //HashMap<Integer, double[]> outEtp = PMEtpDaily.outPMEtp;
+           //HashMap<Integer, double[]> outEtp = PMEtpDaily.outPMEtp;
 
             PMEtpDaily.pm = pm;
             PMEtpDaily.process();
@@ -96,14 +91,13 @@ public class TestPenmanMonteithDaily {
         netradReader.close();
         pressureReader.close();
         soilfluxReader.close();
-        zcentroidReader.close();
     }
     private OmsTimeSeriesIteratorReader getTimeseriesReader( String path, String id, String startDate, String endDate,                                                             int timeStepMinutes ) throws URISyntaxException {
         OmsTimeSeriesIteratorReader reader = new OmsTimeSeriesIteratorReader();
         reader.file = path;
         reader.idfield = "ID";
         reader.tStart = startDate;
-        reader.tTimestep = 1440;
+        reader.tTimestep = 60;
         reader.tEnd = endDate;
         reader.fileNovalue = "-9999.0";
         reader.initProcess();
