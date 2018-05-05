@@ -1,16 +1,8 @@
-package etp;
+package etpClasses;
 
 public class MultiLayersCanopy extends Canopy{
 	
-	double leafSWAbsorption;	
-	double leafSWReflectance;	
-	double leafSWTransmittance;
 	
-	double leafLWAbsorption;	
-	double leafLWReflectance;	
-	double leafLWTransmittance;
-	
-	int numberOfLayers;
 	//@Override
 	//public void work() {
 		//if(empId == 0){

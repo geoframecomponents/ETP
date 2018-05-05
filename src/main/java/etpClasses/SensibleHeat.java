@@ -1,13 +1,10 @@
-package etp;
+package etpClasses;
 import static java.lang.Math.pow;
 import static java.lang.Math.abs;
 
-public class SensibleHeatTransferCoefficient {
-
-	double criticalReynoldsNumber = 3000; 	//fixed
-	double prandtlNumber = 0.71; 			// fixed
+public class SensibleHeat {
 	
-	public double computeConvectiveTransferCoefficient (double airTemperature, double windVelocity, double leafLength) { 
+	public double computeConvectiveTransferCoefficient (double airTemperature, double windVelocity, double leafLength, double criticalReynoldsNumber, double prandtlNumber) { 
 		//double criticalReynoldsNumber = this.criticalReynoldsNumber;
 		// Formula from Monteith & Unsworth, 2007
 		double thermalConductivity = (6.84 * pow(10,-5)) * airTemperature + 5.62 * pow(10,-3); 
@@ -26,5 +23,10 @@ public class SensibleHeatTransferCoefficient {
 	public double computeSensibleHeatTransferCoefficient(double convectiveTransferCoefficient, int leafSide) {
 		double sensibleHeatTransferCoefficient = convectiveTransferCoefficient * leafSide;
 		return sensibleHeatTransferCoefficient;
+	}
+	public double computeSensibleHeatFlux(double sensibleHeatTransferCoefficient, double leafTemperature, double airTemperature) {
+		 // Computation of the sensible heat flux from leaf [J m-2 s-1]
+		double sensibleHeatFlux = sensibleHeatTransferCoefficient * (leafTemperature - airTemperature);
+		return sensibleHeatFlux;	
 	}
 }
