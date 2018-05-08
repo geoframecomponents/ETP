@@ -1,4 +1,4 @@
-package etpTest;
+package etpTestRasterCase;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.jgrasstools.gears.io.rasterreader.OmsRasterReader;
 import org.jgrasstools.gears.io.rasterwriter.OmsRasterWriter;

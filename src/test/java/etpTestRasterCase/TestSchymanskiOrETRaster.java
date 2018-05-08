@@ -1,4 +1,4 @@
-package etpTest;
+package etpTestRasterCase;
 
 //import static org.junit.Assert.*;
 

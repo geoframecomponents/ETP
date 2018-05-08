@@ -1,4 +1,4 @@
-package etpTest;
+package etpTestPointCase;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 

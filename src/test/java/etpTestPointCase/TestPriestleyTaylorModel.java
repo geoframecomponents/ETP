@@ -1,18 +1,12 @@
-<<<<<<< HEAD:src/test/java/etpTestPointCase/TestPriestleyTaylorModel.java
+
 package etpTestPointCase;
 
-=======
-package etpTest;
->>>>>>> 3e6aabd7af321fd3b4fddc130ede72f921f27404:src/test/java/etpTest/TestPriestleyTaylorModel.java
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
-<<<<<<< HEAD:src/test/java/etpTestPointCase/TestPriestleyTaylorModel.java
-=======
-import etp.OmsPriestleyTaylorEtpModel;
->>>>>>> 3e6aabd7af321fd3b4fddc130ede72f921f27404:src/test/java/etpTest/TestPriestleyTaylorModel.java
+
 import org.junit.*;
 
 import etpPointCase.OmsPriestleyTaylorEtpModel;
