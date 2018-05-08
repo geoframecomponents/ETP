@@ -1,4 +1,4 @@
-package etp;
+package etpRasterCase;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;

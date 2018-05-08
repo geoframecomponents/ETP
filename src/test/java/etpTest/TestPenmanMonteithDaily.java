@@ -4,7 +4,7 @@ import java.util.HashMap;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
-import etp.OmsPenmanMonteithETDaily;
+import etpPointCase.OmsPenmanMonteithETDaily;
 import org.junit.*;
 /**
  * Test Pm daily evapotranspiration.

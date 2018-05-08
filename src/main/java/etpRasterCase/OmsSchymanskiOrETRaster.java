@@ -1,4 +1,4 @@
-package etp;
+package etpRasterCase;
 import etpClasses.*;
 
 import java.awt.image.RenderedImage;

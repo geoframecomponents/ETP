@@ -1,4 +1,4 @@
-package etp;
+package etpPointCase;
 import static java.lang.Math.pow;
 //import static org.jgrasstools.gears.libs.modules.JGTConstants.isNovalue;
 //import static org.jgrasstools.gears.libs.modules.JGTConstants.isNovalue;

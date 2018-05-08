@@ -7,7 +7,7 @@ import org.jgrasstools.gears.io.rasterreader.OmsRasterReader;
 import org.jgrasstools.gears.io.rasterwriter.OmsRasterWriter;
 import org.junit.Test;
 
-import etp.OmsSchymanskiOrETRaster;
+import etpRasterCase.OmsSchymanskiOrETRaster;
 
 //import swrbRasterCase.ShortwaveRadiationBalanceRasterCase;
 

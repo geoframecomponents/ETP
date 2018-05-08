@@ -9,7 +9,7 @@ import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
 
 //import etp.Leaf;
 //import org.jgrasstools.gears.utils.math.NumericsUtilities;
-import etp.OmsSchymanskiOrET;
+import etpPointCase.OmsSchymanskiOrET;
 
 import org.junit.*;
 

@@ -3,7 +3,7 @@ import org.geotools.coverage.grid.GridCoverage2D;
 import org.jgrasstools.gears.io.rasterreader.OmsRasterReader;
 import org.jgrasstools.gears.io.rasterwriter.OmsRasterWriter;
 import org.junit.Test;
-import etp.OmsPriestleyTaylorEtRaster;
+import etpRasterCase.OmsPriestleyTaylorEtRaster;
 
 public class TestPriestleyTaylorModelRaster {
 	String startDate	= "1994-01-01 11:00";
