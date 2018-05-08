@@ -18,19 +18,19 @@ public class TestPenmanMonteithDaily {
     public void Test() throws Exception {
         // PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.err);
         // URL rainUrl = this.getClass().getClassLoader().getResource("etp_in_data_rain.csv");
-    	String startDate	= "1994-01-01 11:00";
-        String endDate		= "1994-01-01 23:00";
-        int timeStepMinutes = 60;
+    	String startDate 	= "2016-06-01 00:00";
+        String endDate		= "2016-08-01 00:00";
+        int timeStepMinutes = 60*24;
         String fId 			= "ID";
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
        
-        String inPathToTmax 			="resources/Input/Pm/airT_1.csv";
-        String inPathToTmin				="resources/Input/Pm/airT_1.csv";
-        String inPathToWind 			="resources/Input/Pm/fake.csv";
-        String inPathToRelativeHumidity ="resources/Input/Pm/fake.csv";
-        String inPathToNetRad 			="resources/Input/Pm/netRad_1.csv";
-        String inPathToPressure 		="resources/Input/Pm/fake.csv";
-        String inPathToSoilFlux 		="resources/Input/Pm/fake.csv";
+        String inPathToTmax 			="resources/Input/dataET_point/AirTemperature.csv";
+        String inPathToTmin				="resources/Input/dataET_point/AirTemperature.csv";
+        String inPathToWind 			="resources/Input/dataET_point/WindVelocity.csv";
+        String inPathToRelativeHumidity ="resources/Input/dataET_point/RelativeHumidity.csv";
+        String inPathToNetRad 			="resources/Input/dataET_point/NetRadiation.csv";
+        String inPathToPressure 		="resources/Input/dataET_point/AtmosphericPressure.csv";
+        String inPathToSoilFlux 		="resources/Input/dataET_point/SoilFlux.csv";
         String pathOut 					="resources/Output/ET_penman.csv";
         
         OmsTimeSeriesIteratorReader maxtempReader = getTimeseriesReader(inPathToTmax, fId, startDate, endDate, timeStepMinutes);
@@ -79,8 +79,6 @@ public class TestPenmanMonteithDaily {
             id2ValueMap = soilfluxReader.outData;
             PMEtpDaily.inSoilFlux = id2ValueMap;
             
-           //HashMap<Integer, double[]> outEtp = PMEtpDaily.outPMEtp;
-
             PMEtpDaily.pm = pm;
             PMEtpDaily.process();
         }
@@ -97,7 +95,7 @@ public class TestPenmanMonteithDaily {
         reader.file = path;
         reader.idfield = "ID";
         reader.tStart = startDate;
-        reader.tTimestep = 60;
+        reader.tTimestep = 60*24;
         reader.tEnd = endDate;
         reader.fileNovalue = "-9999.0";
         reader.initProcess();

@@ -6,8 +6,9 @@ import org.junit.Test;
 import etpRasterCase.OmsPriestleyTaylorEtRaster;
 
 public class TestPriestleyTaylorModelRaster {
-	String startDate	= "1994-01-01 11:00";
-    int timeStepMinutes = 60;
+	String startDate = "2016-06-01 00:00";
+    String endDate = "2016-08-01 00:00";
+    int timeStepMinutes = 60*24;
     String fId 			= "ID";
 	GridCoverage2D outETDataGrid = null;
 	@Test

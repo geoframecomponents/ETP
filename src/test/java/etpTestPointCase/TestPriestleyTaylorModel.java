@@ -19,14 +19,14 @@ import etpPointCase.OmsPriestleyTaylorEtpModel;
 public class TestPriestleyTaylorModel{
 	@Test
     public void Test() throws Exception {
-		String startDate = "1994-06-22 05:00";
-        String endDate = "1994-06-22 12:00";
-        int timeStepMinutes = 60;
+		String startDate 	= "2016-06-01 00:00";
+        String endDate		= "2016-08-01 00:00";
+        int timeStepMinutes = 60*24;
         String fId = "ID";
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
-        String inPathToNetRad ="resources/Input/Pm/total_1.csv";
-		String inPathToTemperature ="resources/Input/Pm/airT_1.csv";
-		String pathToETP= "resources/Output/etp_PrestleyTaylor.csv";
+        String inPathToNetRad 		="resources/Input/dataET_point/NetRadiation.csv";
+		String inPathToTemperature 	="resources/Input/dataET_point/AirTemperature.csv";
+		String pathToETP			="resources/Output/etp_PrestleyTaylor.csv";
         OmsTimeSeriesIteratorReader tempReader = getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader netradReader = getTimeseriesReader(inPathToNetRad, fId, startDate, endDate, timeStepMinutes);      
         OmsTimeSeriesIteratorWriter writerETP = new OmsTimeSeriesIteratorWriter();

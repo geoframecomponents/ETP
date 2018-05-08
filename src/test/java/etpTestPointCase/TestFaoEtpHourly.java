@@ -11,12 +11,8 @@ import java.util.HashMap;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 
 import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
-import org.jgrasstools.gears.utils.math.NumericsUtilities;
 import org.junit.*;
-
 import etpPointCase.OmsFaoEtpHourly;
-
-import static org.junit.Assert.assertTrue;
 /**
  * Test FAO Hourly evapotranspiration.
  * 
@@ -32,17 +28,18 @@ public class TestFaoEtpHourly{
 
         // URL rainUrl = this.getClass().getClassLoader().getResource("etp_in_data_rain.csv");
 
-        String startDate = "2005-05-01 00:00";
-        String endDate = "2005-05-02 00:00";
-        int timeStepMinutes = 60;
+        String startDate = "2016-06-01 00:00";
+        String endDate = "2016-08-01 00:00";
+        int timeStepMinutes = 60*24;
         String fId = "ID";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
 
-        String inPathToTemperature ="resources/Input/faoetphour_in_temp.csv";
-        String inPathToWind ="resources/Input/faoetphour_in_wind.csv";
-        String inPathToRelativeHumidity ="resources/Input/faoetphour_in_rh.csv";
-        String inPathToNetRad ="resources/Input/faoetphour_in_rad.csv";
+        String inPathToTemperature 		="resources/Input/dataET_point/AirTemperature.csv";
+        String inPathToWind 			="resources/Input/dataET_point/WindVelocity.csv";
+        String inPathToRelativeHumidity ="resources/Input/dataET_point/RelativeHumidity.csv";
+        String inPathToNetRad 			="resources/Input/dataET_point/NetRadiation.csv";
+        
 
         OmsTimeSeriesIteratorReader tempReader = getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader windReader = getTimeseriesReader(inPathToWind, fId, startDate, endDate, timeStepMinutes);
@@ -76,11 +73,6 @@ public class TestFaoEtpHourly{
             faoEtpHourly.pm = pm;
             faoEtpHourly.process();
 
-            HashMap<Integer, double[]> outEtp = faoEtpHourly.outFaoEtp;
-
-            double value = outEtp.get(1221)[0];
-            assertTrue(NumericsUtilities.dEq(value, 2.8583603700962774));
-            break;
         }
 
         tempReader.close();

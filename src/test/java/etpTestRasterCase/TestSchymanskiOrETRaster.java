@@ -71,7 +71,7 @@ public class TestSchymanskiOrETRaster {
 		GridCoverage2D atmosphericPressure = atmosphericPressureReader.outRaster;
 		
 		OmsRasterReader leafAreaIndexReader = new OmsRasterReader();
-		leafAreaIndexReader.file = "resources/Input/dataET_raster/leaf2100.tif";
+		leafAreaIndexReader.file = "resources/Input/dataET_raster/LeafAreaIndex.tif";
 		leafAreaIndexReader.fileNovalue = -9999.0;
 		leafAreaIndexReader.geodataNovalue = Double.NaN;
 		leafAreaIndexReader.process();

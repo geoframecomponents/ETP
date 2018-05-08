@@ -22,21 +22,21 @@ import org.junit.*;
 public class TestSchymanskiOrET{
 	@Test
     public void Test() throws Exception {
-		String startDate = "1994-06-22 05:00";
-        String endDate = "1994-06-22 12:00";
-        int timeStepMinutes = 60;
+		String startDate= "2016-06-01 00:00";
+        String endDate	= "2016-08-01 00:00";
+        int timeStepMinutes = 60*24;
         String fId = "ID";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
 
-        String inPathToTemperature 		="resources/Input/Pm/airT_1.csv";
-        String inPathToWind 			="resources/Input/Pm/fake.csv";
-        String inPathToRelativeHumidity ="resources/Input/Pm/fake.csv";
-        String inPathToSWRad 			="resources/Input/Pm/total_1.csv";
-        String inPathToLWRad 			="resources/Input/Pm/fake.csv";
-        String inPathToPressure 		="resources/Input/Pm/fake.csv";
-        String inPathToLai 				="resources/Input/Pm/LAI_1.csv";
-        String inPathToCentroids 		="resources/Input/Pm/punti.shp";
+        String inPathToTemperature 		="resources/Input/dataET_point/AirTemperature.csv";
+        String inPathToWind 			="resources/Input/dataET_point/WindVelocity.csv";
+        String inPathToRelativeHumidity ="resources/Input/dataET_point/RelativeHumidity.csv";
+        String inPathToSWRad 			="resources/Input/dataET_point/ShortWaveRadiation.csv";
+        String inPathToLWRad 			="resources/Input/dataET_point/LongWaveRadiation.csv";
+        String inPathToPressure 		="resources/Input/dataET_point/AtmosphericPressure.csv";
+        String inPathToLai 				="resources/Input/dataET_point/LeafAreaIndex.csv";
+        String inPathToCentroids 		="resources/Input/dataET_point/Centroid.shp";
        // String inPathToArea 			="resources/Input/So/SoArea.csv";
 
         OmsTimeSeriesIteratorReader temperatureReader = getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);

@@ -1,14 +1,9 @@
 package etpTestRasterCase;
 
-import java.net.URISyntaxException;
-import java.util.HashMap;
 
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.jgrasstools.gears.io.rasterreader.OmsRasterReader;
 import org.jgrasstools.gears.io.rasterwriter.OmsRasterWriter;
-import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
-import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
-import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
 import org.junit.*;
 
 import etpRasterCase.OmsPriestleyTaylorEtpModel;
@@ -28,7 +23,7 @@ public class TestPriestleyTaylorModel{
 		String startDate = "2007-10-17 15:00" ;
 
 		OmsRasterReader airTReader = new OmsRasterReader();
-		airTReader.file = "resources/Input/airT.asc";
+		airTReader.file = "resources/Input/dataET_raster/kriging_interpolated_temp_20080722_1500.asc";
 		airTReader.fileNovalue = -9999.0;
 		airTReader.geodataNovalue = Double.NaN;
 		airTReader.process();
@@ -36,7 +31,7 @@ public class TestPriestleyTaylorModel{
 
 
 		OmsRasterReader netReader = new OmsRasterReader();
-		netReader.file = "resources/Input/netRad.asc";
+		netReader.file = "resources/Input/dataET_raster/LwrbDownWellingRaster.asc";
 		netReader.fileNovalue = -9999.0;
 		netReader.geodataNovalue = Double.NaN;
 		netReader.process();
