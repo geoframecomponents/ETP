@@ -18,7 +18,8 @@
 package etpPointCase;
 
 import static org.jgrasstools.gears.libs.modules.JGTConstants.isNovalue;
-
+import static java.lang.Math.exp;
+import static java.lang.Math.pow;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
@@ -36,16 +37,16 @@ import oms3.annotations.Out;
 import oms3.annotations.Status;
 import oms3.annotations.Unit;
 
-import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.feature.FeatureIterator;
+//import org.geotools.data.simple.SimpleFeatureCollection;
+//import org.geotools.feature.FeatureIterator;
 import org.jgrasstools.gears.libs.modules.JGTConstants;
 import org.jgrasstools.gears.libs.modules.JGTModel;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
-import org.opengis.feature.simple.SimpleFeature;
+//import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
+//import com.vividsolutions.jts.geom.Geometry;
 
 @Description("Calculate evapotraspiration based on the Priestley Taylor model")
 @Author(name = "Giuseppe Formetta, Silvia Franceschi and Andrea Antonello", contact = "maryban@hotmail.it")
@@ -65,12 +66,12 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 	@Description("The daily net Radiation default value in case of missing data.")
 	@In
 	@Unit("Watt m-2")
-	public double defaultDailyNetradiation = 300.0;
+	public double defaultDailyNetradiation = 0.0;
 
 	@Description("The hourly net Radiation default value in case of missing data.")
 	@In
 	@Unit("Watt m-2")
-	public double defaultHourlyNetradiation = 100.0;
+	public double defaultHourlyNetradiation = 0.0;
 
 	@Description("Switch that defines if it is hourly.")
 	@In
@@ -107,11 +108,13 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 	@Description("The pressure default value in case of missing data.")
 	@In
 	@Unit("KPa")
-	public double defaultPressure = 100.0;
+	public double defaultPressure = 101.325;
 
 	@Description("The mean hourly air temperature.")
 	@In
 	public String tStartDate;
+	
+	double lambda = 2.45*pow(10,6);
 	
 	
 	@Description("the linked HashMap with the coordinate of the stations")
@@ -125,6 +128,8 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 	private DateTimeFormatter formatter = JGTConstants.utcDateFormatterYYYYMMDDHHMM;
 
 	int step;
+	public int time;
+
 
 	@Execute
 	public void process() throws Exception {
@@ -149,18 +154,21 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 
 
 				double netradiation=defaultHourlyNetradiation;
-				if (inNetradiation != null) netradiation  = inNetradiation.get(basinId)[0];
+				if (inNetradiation != null) netradiation  = inNetradiation.get(basinId)[0]*0.8;
 				netradiation=(isNovalue(netradiation))?defaultHourlyNetradiation:netradiation;
 				
-				if (!isNovalue(netradiation )) {
-					if (doHourly == true) {
-						netradiation =netradiation  * 0.0864 / 24.0;
+			//	if (!isNovalue(netradiation )) {
+			//		if (doHourly == true) {
+			//			netradiation =netradiation*0.8*3600;
+			//		} else {
+			//			netradiation = netradiation*0.8*86400;
+			//		}
+			//	}
+				if (doHourly == true) {
+					time =3600;
 					} else {
-						netradiation = netradiation  * 0.0864;
+					time = 86400;
 					}
-				}
-
-
 				double pressure = defaultPressure;
 				if (inPressure != null) {
 					double p = inPressure.get( basinId)[0];
@@ -177,49 +185,42 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 					isLigth = true;
 				}
 
-				double etp = (netradiation<0)?0:compute(pGmorn, pGnight, pAlpha, netradiation, temp, pressure, isLigth, doHourly);
+				double etp = (netradiation<0)?0:compute(pGmorn, pGnight, pAlpha, netradiation, temp, pressure, isLigth, lambda, doHourly);
 				etp=(etp<0)?0:etp;
+				etp = etp*time;
 				outPTEtp.put((Integer)  basinId, new double[]{etp});
 			}
 			step++;
 		}
-
-		private double compute( double ggm, double ggn, double alpha, double NetRad, double AirTem, double AtmPres, boolean islight,
+		private double compute( double ggm, double ggn, double alpha, double NetRad, double AirTem, double AtmPres, boolean islight,double lambda,
 				boolean ishourlyo ) {
 			double result = 0;
 			if (ishourlyo == true) {
 				double den_Delta = (AirTem + 237.3) * (AirTem + 237.3);
 				double exp_Delta = (17.27 * AirTem) / (AirTem + 237.3);
-				double num_Delta = 4098 * (0.6108 * Math.exp(exp_Delta));
+				double num_Delta = 4098 * (0.6108 * exp(exp_Delta));
 				double Delta = num_Delta / den_Delta;
-
-				double lambda = 2.501 - 0.002361 * AirTem;
-				double gamma = 0.001013 * AtmPres / (0.622 * lambda);
-
+				//double lambda = 2.501 - 0.002361 * AirTem;
+				double gamma = 1013 * AtmPres / (0.622 * lambda);
 				double coeff_G;
 				if (islight == true) {
 					coeff_G = ggm;
 				} else {
 					coeff_G = ggn;
 				}
-
 				double G = coeff_G * NetRad;
-
 				result = (alpha) * Delta * (NetRad - G) / ((gamma + Delta) * lambda);
-
 			} else {
 				double den_Delta = (AirTem + 237.3) * (AirTem + 237.3);
 				double exp_Delta = (17.27 * AirTem) / (AirTem + 237.3);
 				double num_Delta = 4098 * (0.6108 * Math.exp(exp_Delta));
 				double Delta = num_Delta / den_Delta;
-
-				double lambda = 2.501 - 0.002361 * AirTem;
-				double gamma = 0.001013 * AtmPres / (0.622 * lambda);
-
+				//double lambda = 2.45*pow(10,6);//.501 - 0.002361 * AirTem;
+				double gamma = 1013 * AtmPres / (0.622 * lambda);
 				result = (alpha) * Delta * (NetRad) / ((gamma + Delta) * lambda);
-
 			}
 			return result;
+			//System.out.println(result);
 		}
 
 }
