@@ -276,7 +276,6 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 			double TranspirationShadow = 0;
 			while(abs(residual) > pow(10,-1)) 
 			{
-				//deltaLeaf = computeDeltaLeaf(leafTemperatureSun, airTemperature);
 				sensibleHeatFlux = sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSun, airTemperature);
 				latentHeatFlux = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
 				netLongWaveRadiation = longWaveRadiationBalance.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureSun, stefanBoltzmannConstant);
@@ -311,14 +310,7 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 	outTranspirationGrid = CoverageUtilities.buildCoverage("Transpiration", outSoWritableRaster,regionMap, inAirTemperatureGrid.getCoordinateReferenceSystem());
 	step++;
 	}
-//////////////////////////////////////////////////////////////
-/**
- * Maps reader transform the GrifCoverage2D in to the writable raster and
- * replace the -9999.0 value with no value.
- *
- * @param inValues: the input map values
- * @return the writable raster of the given map
- */
+
 private WritableRaster mapsTransform  ( GridCoverage2D inValues){	
 	RenderedImage inValuesRenderedImage = inValues.getRenderedImage();
 	WritableRaster inValuesWR = CoverageUtilities.replaceNovalue(inValuesRenderedImage, -9999.0);

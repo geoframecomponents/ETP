@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
 	<name>ETP</name>
-<<<<<<< HEAD
-	<comment>Project ETP created by Buildship.</comment>
-=======
 	<comment></comment>
->>>>>>> 3e6aabd7af321fd3b4fddc130ede72f921f27404
 	<projects>
 	</projects>
 	<buildSpec>
@@ -21,12 +17,7 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
-<<<<<<< HEAD
-		<nature>org.eclipse.buildship.core.gradleprojectnature</nature>
-		<nature>org.eclipse.jdt.core.javanature</nature>
-=======
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>org.eclipse.buildship.core.gradleprojectnature</nature>
->>>>>>> 3e6aabd7af321fd3b4fddc130ede72f921f27404
 	</natures>
 </projectDescription>

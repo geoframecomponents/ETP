@@ -264,7 +264,6 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 			double ETshadow = 0;
 			while(abs(residual) > pow(10,-1)) 
 				{
-				//deltaLeaf = computeDeltaLeaf(leafTemperatureSun, airTemperature);
 				sensibleHeatFlux = sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSun, airTemperature);
 				latentHeatFlux = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
 				netLongWaveRadiation = longWaveRadiationBalance.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureSun, stefanBoltzmannConstant);
