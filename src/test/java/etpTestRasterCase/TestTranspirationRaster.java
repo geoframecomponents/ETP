@@ -1,26 +1,15 @@
 package etpTestRasterCase;
 
-//import static org.junit.Assert.*;
-
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.jgrasstools.gears.io.rasterreader.OmsRasterReader;
 import org.jgrasstools.gears.io.rasterwriter.OmsRasterWriter;
 import org.junit.Test;
+import etpRasterCase.OmsTranspirationRaster;
 
-import etpRasterCase.OmsSchymanskiOrETRaster;
-
-//import swrbRasterCase.ShortwaveRadiationBalanceRasterCase;
-
-public class TestSchymanskiOrETRaster {
-
-	
-	GridCoverage2D outETDataGrid = null;
-	
+public class TestTranspirationRaster {
+	GridCoverage2D outTranspirationDataGrid = null;
 	@Test
 	public void Test() throws Exception {
-
-		//String startDate = "2007-10-17 15:00" ;
-
 		OmsRasterReader demElevationReader = new OmsRasterReader();
 		demElevationReader.file = "resources/Input/dataET_raster/mybasin.asc";
 		demElevationReader.fileNovalue = -9999.0;
@@ -77,26 +66,26 @@ public class TestSchymanskiOrETRaster {
 		leafAreaIndexReader.process();
 		GridCoverage2D leafAreaIndex = leafAreaIndexReader.outRaster;
 		
-		OmsSchymanskiOrETRaster ETRaster = new OmsSchymanskiOrETRaster();
+		OmsTranspirationRaster TranspirationRaster = new OmsTranspirationRaster();
 
-		ETRaster.inAirTemperatureGrid = airTemperature;
-		ETRaster.inDemElevationGrid = demElevation;
-		ETRaster.inShortWaveRadiationGrid= shortWaveRadiation;
-		ETRaster.inLongWaveRadiationGrid = longWaveRadiation;
-		ETRaster.inRelativeHumidityGrid = relativeHumidity;
-		ETRaster.inWindVelocityGrid = windVelocity;
-		ETRaster.inAtmosphericPressureGrid = atmosphericPressure;
-		ETRaster.inLeafAreaIndexGrid = leafAreaIndex;
-		ETRaster.doHourly=true;
+		TranspirationRaster.inAirTemperatureGrid = airTemperature;
+		TranspirationRaster.inDemElevationGrid = demElevation;
+		TranspirationRaster.inShortWaveRadiationGrid= shortWaveRadiation;
+		TranspirationRaster.inLongWaveRadiationGrid = longWaveRadiation;
+		TranspirationRaster.inRelativeHumidityGrid = relativeHumidity;
+		TranspirationRaster.inWindVelocityGrid = windVelocity;
+		TranspirationRaster.inAtmosphericPressureGrid = atmosphericPressure;
+		TranspirationRaster.inLeafAreaIndexGrid = leafAreaIndex;
+		TranspirationRaster.doHourly=true;
 			
-		ETRaster.area = 1.0;	
+		TranspirationRaster.area = 1.0;	
 		
-		ETRaster.process();
+		TranspirationRaster.process();
 		
-		outETDataGrid  = ETRaster.outETGrid;
+		outTranspirationDataGrid  = TranspirationRaster.outTranspirationGrid;
 
 		OmsRasterWriter writerETtraster = new OmsRasterWriter();
-		writerETtraster.inRaster = outETDataGrid;
+		writerETtraster.inRaster = outTranspirationDataGrid;
 		writerETtraster.file = "resources/Output/ETP_SO.asc";
 		writerETtraster.process();
 	}

@@ -55,7 +55,7 @@ import etpClasses.*;
 @Name("")
 @Status(Status.CERTIFIED)
 @License("General Public License Version 3 (GPLv3)")
-public class OmsSchymanskiOrET extends JGTModel implements Parameters {
+public class OmsTranspiration extends JGTModel implements Parameters {
 	
 	// ENVIRONMENTAL VARIABLES
 	@Description("Air temperature.")
@@ -156,11 +156,11 @@ public class OmsSchymanskiOrET extends JGTModel implements Parameters {
 	@Description("The reference evapotranspiration.")
 	@Unit("mm day-1")
 	@Out
-	public HashMap<Integer, double[]> outSOEt;
+	public HashMap<Integer, double[]> outTranspiration;
 	@Description("The reference evapotranspiration.")
 	@Unit("mm day-1")
 	@Out
-	public HashMap<Integer, double[]> outSOLT;
+	public HashMap<Integer, double[]> outLeafTemperature;
 	
 	// OTHERS
 	@Description("area.")
@@ -192,8 +192,8 @@ public class OmsSchymanskiOrET extends JGTModel implements Parameters {
 		Coordinate coordinate = (Coordinate) stationCoordinates.get(idIterator.next());
 		elevation = coordinate.z;
 		
-		outSOEt = new HashMap<Integer, double[]>();
-		outSOLT = new HashMap<Integer, double[]>();
+		outTranspiration = new HashMap<Integer, double[]>();
+		outLeafTemperature = new HashMap<Integer, double[]>();
 		Set<Entry<Integer, double[]>> entrySet = inAirTemperature.entrySet();
 		for( Entry<Integer, double[]> entry : entrySet ) {
 			Integer basinId = entry.getKey();
@@ -272,7 +272,7 @@ public class OmsSchymanskiOrET extends JGTModel implements Parameters {
 				leafTemperatureSun = computeLeafTemperature(leafSide, longWaveEmittance, sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
 				}
 			ETsun = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-			outSOLT.put(basinId, new double[]{leafTemperatureSun});
+			outLeafTemperature.put(basinId, new double[]{leafTemperatureSun});
 
 			shortWaveRadiation = absorbedRadiation*0.2;
 			double residualSh = 1.0;
@@ -291,7 +291,7 @@ public class OmsSchymanskiOrET extends JGTModel implements Parameters {
 				}
 			ETshadow = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
 
-			outSOEt.put(basinId, new double[]{(((2.0*ETsun) + (ETshadow*(leafAreaIndex-2.0*area)))*time/latentHeatEvaporation)});
+			outTranspiration.put(basinId, new double[]{(((2.0*ETsun) + (ETshadow*(leafAreaIndex-2.0*area)))*time/latentHeatEvaporation)});
 			}
 		}
 	

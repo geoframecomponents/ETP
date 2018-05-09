@@ -9,7 +9,7 @@ import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
 
 //import etp.Leaf;
 //import org.jgrasstools.gears.utils.math.NumericsUtilities;
-import etpPointCase.OmsSchymanskiOrET;
+import etpPointCase.OmsTranspiration;
 
 import org.junit.*;
 
@@ -19,7 +19,7 @@ import org.junit.*;
  * @author Michele Bottazzi (michele.bottazzi@gmail.com)
  */
 //@SuppressWarnings("nls")
-public class TestSchymanskiOrET{
+public class TestTranspiration{
 	@Test
     public void Test() throws Exception {
 		String startDate= "2016-06-01 00:00";
@@ -37,63 +37,60 @@ public class TestSchymanskiOrET{
         String inPathToPressure 		="resources/Input/dataET_point/AtmosphericPressure.csv";
         String inPathToLai 				="resources/Input/dataET_point/LeafAreaIndex.csv";
         String inPathToCentroids 		="resources/Input/dataET_point/Centroid.shp";
-       // String inPathToArea 			="resources/Input/So/SoArea.csv";
 
-        OmsTimeSeriesIteratorReader temperatureReader = getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
-        OmsTimeSeriesIteratorReader windReader = getTimeseriesReader(inPathToWind, fId, startDate, endDate, timeStepMinutes);
-        OmsTimeSeriesIteratorReader humidityReader = getTimeseriesReader(inPathToRelativeHumidity, fId, startDate, endDate, timeStepMinutes);
-        OmsTimeSeriesIteratorReader shortwaveReader = getTimeseriesReader(inPathToSWRad, fId, startDate, endDate,timeStepMinutes);
-        OmsTimeSeriesIteratorReader longwaveReader = getTimeseriesReader(inPathToLWRad, fId, startDate, endDate,timeStepMinutes);
-        OmsTimeSeriesIteratorReader pressureReader = getTimeseriesReader(inPathToPressure, fId, startDate, endDate,timeStepMinutes);
-        OmsTimeSeriesIteratorReader laiReader = getTimeseriesReader(inPathToLai, fId, startDate, endDate,timeStepMinutes);      
-        OmsShapefileFeatureReader stationsReader = new OmsShapefileFeatureReader();
-		stationsReader.file = inPathToCentroids;
-		stationsReader.readFeatureCollection();
-		SimpleFeatureCollection stationsFC = stationsReader.geodata;
+        OmsTimeSeriesIteratorReader temperatureReader	= getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
+        OmsTimeSeriesIteratorReader windReader 		 	= getTimeseriesReader(inPathToWind, fId, startDate, endDate, timeStepMinutes);
+        OmsTimeSeriesIteratorReader humidityReader 		= getTimeseriesReader(inPathToRelativeHumidity, fId, startDate, endDate, timeStepMinutes);
+        OmsTimeSeriesIteratorReader shortwaveReader 	= getTimeseriesReader(inPathToSWRad, fId, startDate, endDate,timeStepMinutes);
+        OmsTimeSeriesIteratorReader longwaveReader 		= getTimeseriesReader(inPathToLWRad, fId, startDate, endDate,timeStepMinutes);
+        OmsTimeSeriesIteratorReader pressureReader 		= getTimeseriesReader(inPathToPressure, fId, startDate, endDate,timeStepMinutes);
+        OmsTimeSeriesIteratorReader leafAreaIndexReader	= getTimeseriesReader(inPathToLai, fId, startDate, endDate,timeStepMinutes);      
+        OmsShapefileFeatureReader centroidsReader 		= new OmsShapefileFeatureReader();
+		centroidsReader.file = inPathToCentroids;
+		centroidsReader.readFeatureCollection();
+		SimpleFeatureCollection stationsFC = centroidsReader.geodata;
 		
-        OmsSchymanskiOrET SoET = new OmsSchymanskiOrET();
-        SoET.inStations = stationsFC;
-        SoET.fStationsid="id";
-        SoET.fPointZ="quota";
+		OmsTranspiration Transpiration = new OmsTranspiration();
+		Transpiration.inStations = stationsFC;
+		Transpiration.fStationsid="id";
+		Transpiration.fPointZ="quota";
          
 
         while(temperatureReader.doProcess ) {
         	temperatureReader.nextRecord();
 
             HashMap<Integer, double[]> id2ValueMap = temperatureReader.outData;
-            SoET.inAirTemperature = id2ValueMap;
-            SoET.doHourly = true;
-            SoET.area = 1.0;	
+            Transpiration.inAirTemperature = id2ValueMap;
+            Transpiration.doHourly = true;
+            Transpiration.area = 1.0;	
             
-            //SoET.leafTemperature = SoET.inAirTemperature + 2.0;
-			//double leafTemperature = leaf.temperature;   
-			
+           
             windReader.nextRecord();
             id2ValueMap = windReader.outData;
-            SoET.inWindVelocity = id2ValueMap;
+            Transpiration.inWindVelocity = id2ValueMap;
 
             humidityReader.nextRecord();
             id2ValueMap = humidityReader.outData;
-            SoET.inRelativeHumidity = id2ValueMap;
+            Transpiration.inRelativeHumidity = id2ValueMap;
 
             shortwaveReader.nextRecord();
             id2ValueMap = shortwaveReader.outData;
-            SoET.inShortWaveRadiation = id2ValueMap;
+            Transpiration.inShortWaveRadiation = id2ValueMap;
             
             longwaveReader.nextRecord();
             id2ValueMap = longwaveReader.outData;
-            SoET.inLongWaveRadiation = id2ValueMap;
+            Transpiration.inLongWaveRadiation = id2ValueMap;
             
             pressureReader.nextRecord();
             id2ValueMap = pressureReader.outData;
-            SoET.inAtmosphericPressure = id2ValueMap;
+            Transpiration.inAtmosphericPressure = id2ValueMap;
             
-            laiReader.nextRecord();
-            id2ValueMap = laiReader.outData;
-            SoET.inLeafAreaIndex = id2ValueMap;
+            leafAreaIndexReader.nextRecord();
+            id2ValueMap = leafAreaIndexReader.outData;
+            Transpiration.inLeafAreaIndex = id2ValueMap;
             
-            SoET.pm = pm;
-            SoET.process();
+            Transpiration.pm = pm;
+            Transpiration.process();
 
         }
         temperatureReader.close();

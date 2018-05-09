@@ -64,7 +64,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 @Status()
 @License("General Public License Version 3 (GPLv3)")
 @SuppressWarnings("nls")
-public class OmsSchymanskiOrETRaster extends JGTModel implements Parameters {
+public class OmsTranspirationRaster extends JGTModel implements Parameters {
 	
 	// ENVIRONMENTAL VARIABLES
 	@Description("The map of the interpolated temperature.")
@@ -154,7 +154,7 @@ public class OmsSchymanskiOrETRaster extends JGTModel implements Parameters {
 	// OUTPUT
 	@Description("The output diffuse radiation map")
 	@Out
-	public GridCoverage2D outETGrid;
+	public GridCoverage2D outTranspirationGrid;
 	WritableRaster rasterGrid;
 	
 	WritableRaster demElevationMap;
@@ -206,8 +206,8 @@ public class OmsSchymanskiOrETRaster extends JGTModel implements Parameters {
 		dx=regionMap.getXres();
 		}
 
-	WritableRaster outEtSoWritableRaster = CoverageUtilities.createDoubleWritableRaster(columns, rows, null, null, null);
-	WritableRandomIter outEtSoIter = RandomIterFactory.createWritable(outEtSoWritableRaster, null);       
+	WritableRaster outSoWritableRaster = CoverageUtilities.createDoubleWritableRaster(columns, rows, null, null, null);
+	WritableRandomIter outRasterIter = RandomIterFactory.createWritable(outSoWritableRaster, null);       
 
 	for( int row = 1; row < rows - 1; row++ ) {
 		for( int column = 1; column < columns - 1; column++ ) {
@@ -281,8 +281,8 @@ public class OmsSchymanskiOrETRaster extends JGTModel implements Parameters {
 			double sensibleHeatFlux = 0;
 			double netLongWaveRadiation = 0;
 			double leafTemperatureSun = leafTemperature;
-			double ETsun = 0;
-			double ETshadow = 0;
+			double TranspirationSun = 0;
+			double TranspirationShadow = 0;
 			while(abs(residual) > pow(10,-1)) 
 			{
 				//deltaLeaf = computeDeltaLeaf(leafTemperatureSun, airTemperature);
@@ -292,7 +292,7 @@ public class OmsSchymanskiOrETRaster extends JGTModel implements Parameters {
 				residual = (shortWaveRadiation - netLongWaveRadiation) - sensibleHeatFlux - latentHeatFlux;
 				leafTemperatureSun = computeLeafTemperature(leafSide, longWaveEmittance, sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
 				}
-			ETsun = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
+			TranspirationSun = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
 						
 			shortWaveRadiation = absorbedRadiation*0.2;
 			double residualSh = 1.0;
@@ -309,15 +309,15 @@ public class OmsSchymanskiOrETRaster extends JGTModel implements Parameters {
 				residualSh = (shortWaveRadiation- netLongWaveRadiationSh) - sensibleHeatFluxSh - latentHeatFluxSh;
 				leafTemperatureSh = computeLeafTemperature(leafSide, longWaveEmittance,sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
 				}
-			ETshadow = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);			
+			TranspirationShadow = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);			
 			
-			double ETout = (ETsun*area + ETshadow*(leafAreaIndex-area))*time/latentHeatEvaporation;
+			double TranspirationOut = (TranspirationSun*area + TranspirationShadow*(leafAreaIndex-area))*time/latentHeatEvaporation;
 
-			outEtSoIter.setSample(column, row, 0,ETout);
+			outRasterIter.setSample(column, row, 0,TranspirationOut);
 			}
 		}
-	CoverageUtilities.setNovalueBorder(outEtSoWritableRaster);
-	outETGrid = CoverageUtilities.buildCoverage("ET", outEtSoWritableRaster,regionMap, inAirTemperatureGrid.getCoordinateReferenceSystem());
+	CoverageUtilities.setNovalueBorder(outSoWritableRaster);
+	outTranspirationGrid = CoverageUtilities.buildCoverage("Transpiration", outSoWritableRaster,regionMap, inAirTemperatureGrid.getCoordinateReferenceSystem());
 	step++;
 	}
 //////////////////////////////////////////////////////////////
