@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
+import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
 
 //import etp.Leaf;
@@ -25,6 +26,9 @@ public class TestTranspiration{
 		String startDate= "2016-06-01 00:00";
         String endDate	= "2016-08-01 00:00";
         int timeStepMinutes = 60*24;
+/*		String startDate= "2008-01-01 00:00";
+        String endDate	= "2008-01-01 10:00";
+        int timeStepMinutes = 60;*/
         String fId = "ID";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
@@ -36,7 +40,9 @@ public class TestTranspiration{
         String inPathToLWRad 			="resources/Input/dataET_point/LongWaveRadiation.csv";
         String inPathToPressure 		="resources/Input/dataET_point/AtmosphericPressure.csv";
         String inPathToLai 				="resources/Input/dataET_point/LeafAreaIndex.csv";
-        String inPathToCentroids 		="resources/Input/dataET_point/Centroid.shp";
+        String inPathToCentroids 		="resources/Input/dataET_point/CentroidDem.shp";
+        String outPathToTranspiration	="resources/Output/Transpiration.csv";
+		String outPathToLeafTemperature	="resources/Output/LeafTemperature.csv";
 
         OmsTimeSeriesIteratorReader temperatureReader	= getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader windReader 		 	= getTimeseriesReader(inPathToWind, fId, startDate, endDate, timeStepMinutes);
@@ -45,15 +51,30 @@ public class TestTranspiration{
         OmsTimeSeriesIteratorReader longwaveReader 		= getTimeseriesReader(inPathToLWRad, fId, startDate, endDate,timeStepMinutes);
         OmsTimeSeriesIteratorReader pressureReader 		= getTimeseriesReader(inPathToPressure, fId, startDate, endDate,timeStepMinutes);
         OmsTimeSeriesIteratorReader leafAreaIndexReader	= getTimeseriesReader(inPathToLai, fId, startDate, endDate,timeStepMinutes);      
-        OmsShapefileFeatureReader centroidsReader 		= new OmsShapefileFeatureReader();
-		centroidsReader.file = inPathToCentroids;
+        
+        
+		OmsShapefileFeatureReader centroidsReader 		= new OmsShapefileFeatureReader();
+        centroidsReader.file = inPathToCentroids;
 		centroidsReader.readFeatureCollection();
 		SimpleFeatureCollection stationsFC = centroidsReader.geodata;
+		
+		
+		OmsTimeSeriesIteratorWriter TranspirationWriter = new OmsTimeSeriesIteratorWriter();
+		TranspirationWriter.file = outPathToTranspiration;
+		TranspirationWriter.tStart = startDate;
+		TranspirationWriter.tTimestep = timeStepMinutes;
+		TranspirationWriter.fileNovalue="-9999";
+		
+		OmsTimeSeriesIteratorWriter leafTemperatureWriter = new OmsTimeSeriesIteratorWriter();
+		leafTemperatureWriter.file = outPathToLeafTemperature;
+		leafTemperatureWriter.tStart = startDate;
+		leafTemperatureWriter.tTimestep = timeStepMinutes;
+		leafTemperatureWriter.fileNovalue="-9999";
 		
 		OmsTranspiration Transpiration = new OmsTranspiration();
 		Transpiration.inStations = stationsFC;
 		Transpiration.fStationsid="id";
-		Transpiration.fPointZ="quota";
+		Transpiration.fPointZ="elevation";
          
 
         while(temperatureReader.doProcess ) {
@@ -91,8 +112,22 @@ public class TestTranspiration{
             
             Transpiration.pm = pm;
             Transpiration.process();
+            
+         //   HashMap<Integer, double[]> outHMdown = 
+			//HashMap<Integer, double[]> outHMup = Transpiration.outLeafTemperature;
 
-        }
+			TranspirationWriter.inData = Transpiration.outTranspiration;;//Transpiration.outTranspiration;
+			TranspirationWriter.writeNextLine();			 	
+			if (outPathToTranspiration != null) {
+				TranspirationWriter.close();
+				}
+			leafTemperatureWriter.inData = Transpiration.outLeafTemperature;;//Transpiration.outTranspiration;
+			leafTemperatureWriter.writeNextLine();			 	
+			if (outPathToLeafTemperature != null) {
+				leafTemperatureWriter.close();
+				}
+	        }
+       
         temperatureReader.close();
         windReader.close();
         humidityReader.close();

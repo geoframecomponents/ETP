@@ -23,6 +23,7 @@ import oms3.annotations.Unit;
 
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.feature.FeatureIterator;
+import org.geotools.feature.SchemaException;
 import org.jgrasstools.gears.libs.modules.JGTModel;
 import org.jgrasstools.hortonmachine.i18n.HortonMessageHandler;
 import org.opengis.feature.simple.SimpleFeature;
@@ -132,7 +133,7 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 	public String fStationsid;
 
 	@Description(" The vetor containing the id of the station")
-	Object []idStations;
+	Object []basinId;
 	//@Description(" The vetor containing the id of the station")
 //	Object []elevStations;
 	
@@ -188,13 +189,13 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 			
 		stationCoordinates = getCoordinate(0,inStations, fStationsid);
 		Iterator<Integer> idIterator = stationCoordinates.keySet().iterator();
-		idStations= stationCoordinates.keySet().toArray();
+		basinId= stationCoordinates.keySet().toArray();
 		Coordinate coordinate = (Coordinate) stationCoordinates.get(idIterator.next());
 		elevation = coordinate.z;
-		
 		outTranspiration = new HashMap<Integer, double[]>();
 		outLeafTemperature = new HashMap<Integer, double[]>();
 		Set<Entry<Integer, double[]>> entrySet = inAirTemperature.entrySet();
+		//for (int i=0;i<basinId.length;i++){
 		for( Entry<Integer, double[]> entry : entrySet ) {
 			Integer basinId = entry.getKey();
 			
@@ -203,6 +204,7 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				} else {
 				time = 86400;
 				}
+
 			Leaf propertyOfLeaf = new Leaf();
 			double poreRadius = propertyOfLeaf.poreRadius;
 			double poreArea = propertyOfLeaf.poreArea;
@@ -219,6 +221,8 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 			double longWaveReflectance = propertyOfLeaf.longWaveReflectance;	
 			double longWaveTransmittance = propertyOfLeaf.longWaveTransmittance;
 			double longWaveEmittance = propertyOfLeaf.longWaveEmittance;
+			
+
 		
 			double relativeHumidity = inRelativeHumidity.get(basinId)[0];
 			if (relativeHumidity == nullValue) {relativeHumidity = defaultRelativeHumidity;}
@@ -254,15 +258,17 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 			double latentHeatTransferCoefficient = latentHeat.computeLatentHeatTransferCoefficient(airTemperature, atmosphericPressure, leafSide, convectiveTransferCoefficient, airSpecificHeat, 
 					airDensity, molarGasConstant, molarVolume, waterMolarMass, latentHeatEvaporation, poreDensity, poreArea, poreDepth, poreRadius);
 			
+			if (leafAreaIndex != 0) {	
+
 			shortWaveRadiation = absorbedRadiation;
-			double residual = 1.0;
+			double residual = 10.0;
 			double latentHeatFlux = 0;
 			double sensibleHeatFlux = 0;
 			double netLongWaveRadiation = 0;
 			double leafTemperatureSun = leafTemperature;
-			double ETsun = 0;
-			double ETshadow = 0;
-			while(abs(residual) > pow(10,-1)) 
+			double TranspirationSun = 0;
+			double TranspirationShadow = 0;
+			while(abs(residual) > 1) 
 				{
 				sensibleHeatFlux = sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSun, airTemperature);
 				latentHeatFlux = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
@@ -270,17 +276,17 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				residual = (shortWaveRadiation - netLongWaveRadiation) - sensibleHeatFlux - latentHeatFlux;
 				leafTemperatureSun = computeLeafTemperature(leafSide, longWaveEmittance, sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
 				}
-			ETsun = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-			outLeafTemperature.put(basinId, new double[]{leafTemperatureSun});
+			TranspirationSun = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
+			//outLeafTemperature.put(basinId, new double[]{leafTemperatureSun});
 
 			shortWaveRadiation = absorbedRadiation*0.2;
-			double residualSh = 1.0;
+			double residualSh = 10.0;
 			double latentHeatFluxSh = 0;
 			double sensibleHeatFluxSh = 0;
 			double netLongWaveRadiationSh = 0;
 			double leafTemperatureSh = leafTemperature;
 			
-			while(abs(residualSh) > pow(10,-1)) 
+			while(abs(residualSh) > 1) 
 				{
 				sensibleHeatFluxSh = sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSh, airTemperature);
 				latentHeatFluxSh = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
@@ -288,9 +294,13 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				residualSh = (shortWaveRadiation- netLongWaveRadiationSh) - sensibleHeatFluxSh - latentHeatFluxSh;
 				leafTemperatureSh = computeLeafTemperature(leafSide, longWaveEmittance,sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
 				}
-			ETshadow = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-
-			outTranspiration.put(basinId, new double[]{(((2.0*ETsun) + (ETshadow*(leafAreaIndex-2.0*area)))*time/latentHeatEvaporation)});
+			TranspirationShadow = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
+			
+			double TotalTranspiration = ((2.0*TranspirationSun) + (TranspirationShadow*(leafAreaIndex-2.0*area)))*(time/latentHeatEvaporation);
+			
+			storeResult((Integer)basinId,TotalTranspiration,leafTemperatureSun);}
+			else {storeResult((Integer)basinId,0,0);}
+			//outTranspiration.put(basinId, new double[]{(((2.0*TranspirationSun) + (TranspirationShadow*(leafAreaIndex-2.0*area)))*time/latentHeatEvaporation)});
 			}
 		}
 	
@@ -343,5 +353,11 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 		}
 
 		return id2CoordinatesMcovarianceMatrix;
+	}
+	private void storeResult(int ID,double TotalTranspiration, double leafTemperatureSun) 
+			throws SchemaException {
+
+		outTranspiration.put(ID, new double[]{TotalTranspiration});
+		outLeafTemperature.put(ID, new double[]{leafTemperatureSun});
 	}
 }
