@@ -26,9 +26,6 @@ public class TestTranspiration{
 		String startDate= "2016-06-01 00:00";
         String endDate	= "2016-08-01 00:00";
         int timeStepMinutes = 60*24;
-/*		String startDate= "2008-01-01 00:00";
-        String endDate	= "2008-01-01 10:00";
-        int timeStepMinutes = 60;*/
         String fId = "ID";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
@@ -112,16 +109,13 @@ public class TestTranspiration{
             
             Transpiration.pm = pm;
             Transpiration.process();
-            
-         //   HashMap<Integer, double[]> outHMdown = 
-			//HashMap<Integer, double[]> outHMup = Transpiration.outLeafTemperature;
 
-			TranspirationWriter.inData = Transpiration.outTranspiration;;//Transpiration.outTranspiration;
+			TranspirationWriter.inData = Transpiration.outTranspiration;
 			TranspirationWriter.writeNextLine();			 	
 			if (outPathToTranspiration != null) {
 				TranspirationWriter.close();
 				}
-			leafTemperatureWriter.inData = Transpiration.outLeafTemperature;;//Transpiration.outTranspiration;
+			leafTemperatureWriter.inData = Transpiration.outLeafTemperature;
 			leafTemperatureWriter.writeNextLine();			 	
 			if (outPathToLeafTemperature != null) {
 				leafTemperatureWriter.close();
