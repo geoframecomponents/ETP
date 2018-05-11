@@ -298,8 +298,11 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 			
 			double TotalTranspiration = ((2.0*TranspirationSun) + (TranspirationShadow*(leafAreaIndex-2.0*area)))*(time/latentHeatEvaporation);
 			
-			storeResult((Integer)basinId,TotalTranspiration,leafTemperatureSun);}
-			else {storeResult((Integer)basinId,0,0);}
+			storeResult((Integer)basinId,TotalTranspiration,leafTemperatureSun);
+			}
+			else {
+				storeResult((Integer)basinId,0,0);
+				}
 			//outTranspiration.put(basinId, new double[]{(((2.0*TranspirationSun) + (TranspirationShadow*(leafAreaIndex-2.0*area)))*time/latentHeatEvaporation)});
 			}
 		}
