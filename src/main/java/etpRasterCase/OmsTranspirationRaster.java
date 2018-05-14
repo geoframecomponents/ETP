@@ -274,13 +274,15 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 			double leafTemperatureSun = leafTemperature;
 			double TranspirationSun = 0;
 			double TranspirationShadow = 0;
-			while(abs(residual) > pow(10,-1)) 
+			int iterator = 0;
+			while(abs(residual) > 1 && iterator <= 5) 
 			{
 				sensibleHeatFlux = sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSun, airTemperature);
 				latentHeatFlux = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
 				netLongWaveRadiation = longWaveRadiationBalance.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureSun, stefanBoltzmannConstant);
 				residual = (shortWaveRadiation - netLongWaveRadiation) - sensibleHeatFlux - latentHeatFlux;
 				leafTemperatureSun = computeLeafTemperature(leafSide, longWaveEmittance, sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
+				iterator++;
 				}
 			TranspirationSun = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
 						
@@ -290,14 +292,15 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 			double sensibleHeatFluxSh = 0;
 			double netLongWaveRadiationSh = 0;
 			double leafTemperatureSh = leafTemperature;
-			
-			while(abs(residualSh) > pow(10,-1)) 
-				{
+			iterator = 0;
+			while(abs(residual) > 1 && iterator <= 5)
+			{
 				sensibleHeatFluxSh = sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSh, airTemperature);
 				latentHeatFluxSh = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
 				netLongWaveRadiationSh = longWaveRadiationBalance.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureSh, stefanBoltzmannConstant);
 				residualSh = (shortWaveRadiation- netLongWaveRadiationSh) - sensibleHeatFluxSh - latentHeatFluxSh;
 				leafTemperatureSh = computeLeafTemperature(leafSide, longWaveEmittance,sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
+				iterator++;
 				}
 			TranspirationShadow = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);			
 			
