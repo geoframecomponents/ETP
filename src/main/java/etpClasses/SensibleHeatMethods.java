@@ -2,7 +2,7 @@ package etpClasses;
 import static java.lang.Math.pow;
 import static java.lang.Math.abs;
 
-public class SensibleHeat {
+public class SensibleHeatMethods {
 	
 	public double computeConvectiveTransferCoefficient (double airTemperature, double windVelocity, double leafLength, double criticalReynoldsNumber, double prandtlNumber) { 
 		//double criticalReynoldsNumber = this.criticalReynoldsNumber;

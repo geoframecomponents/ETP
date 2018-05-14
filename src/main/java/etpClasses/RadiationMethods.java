@@ -2,7 +2,7 @@ package etpClasses;
 
 import static java.lang.Math.pow;
 
-public class LongWaveRadiationBalance {
+public class RadiationMethods {
 	
 	public double computeLongWaveRadiationBalance(double leafSide, double longWaveEmittance, double airTemperature, double leafTemperature, double stefanBoltzmannConstant) {
 		// Compute the net long wave radiation i.e. the incoming minus outgoing [J m-2 s-1]

@@ -3,7 +3,7 @@ package etpClasses;
 import static java.lang.Math.exp;
 import static java.lang.Math.pow;
 
-public class Pressures {
+public class PressureMethods {
 	
 	public double computeSaturationVaporPressure(double airTemperature, double waterMolarMass, double latentHeatEvaporation, double molarGasConstant) {
 		 // Computation of the saturation vapor pressure at air temperature [Pa]

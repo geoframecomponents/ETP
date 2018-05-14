@@ -3,7 +3,7 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.lang.Math.PI;
 
-public class LatentHeat {
+public class LatentHeatMethods {
 	public double computeLatentHeatTransferCoefficient (double airTemperature, double atmosphericPressure, int leafSide,double convectiveTransferCoefficient,
 		double airSpecificHeat, double airDensity, double molarGasConstant, double molarVolume, double waterMolarMass, double latentHeatEvaporation, 
 		double poreDensity,	double poreArea, double poreDepth, double poreRadius) {

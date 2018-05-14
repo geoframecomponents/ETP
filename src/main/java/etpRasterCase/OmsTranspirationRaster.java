@@ -163,10 +163,10 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 	
 
 	// METHODS FROM CLASSES
-	SensibleHeat sensibleHeat = new SensibleHeat();
-	LatentHeat latentHeat = new LatentHeat();
-	Pressures getPressure = new Pressures(); 
-	LongWaveRadiationBalance longWaveRadiationBalance = new LongWaveRadiationBalance();
+	SensibleHeatMethods sensibleHeat = new SensibleHeatMethods();
+	LatentHeatMethods latentHeat = new LatentHeatMethods();
+	PressureMethods pressure = new PressureMethods(); 
+	RadiationMethods longWaveRadiationBalance = new RadiationMethods();
 	
 	//private WritableRaster outWR;
 
@@ -248,16 +248,16 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 			if (windVelocity == nullValue) {windVelocity = defaultWindVelocity;}   
 
 			atmosphericPressure = 	atmosphericPressureMap.getSampleDouble(column, row, 0);
-			if (atmosphericPressure == nullValue) {atmosphericPressure = defaultAtmosphericPressure;}	
+			if (atmosphericPressure == nullValue) {atmosphericPressure = pressure.computePressure(defaultAtmosphericPressure, massAirMolecule, gravityConstant, elevation,boltzmannConstant, airTemperature);}	
 						
 			leafAreaIndex = 	leafAreaIndexMap.getSampleDouble(column, row, 0);
 			if (leafAreaIndex == nullValue) {leafAreaIndex = defaultLeafAreaIndex;}	
 			else if (leafAreaIndex > 100) {leafAreaIndex = defaultLeafAreaIndex;}	
 			else {leafAreaIndex = leafAreaIndex/10;}
 			
-			double saturationVaporPressure = getPressure.computeSaturationVaporPressure(airTemperature, waterMolarMass, latentHeatEvaporation, molarGasConstant);
+			double saturationVaporPressure = pressure.computeSaturationVaporPressure(airTemperature, waterMolarMass, latentHeatEvaporation, molarGasConstant);
 			double vaporPressure = relativeHumidity * saturationVaporPressure/100.0;
-			double delta = getPressure.computeDelta(airTemperature, waterMolarMass, latentHeatEvaporation, molarGasConstant);
+			double delta = pressure.computeDelta(airTemperature, waterMolarMass, latentHeatEvaporation, molarGasConstant);
 			
 			double convectiveTransferCoefficient = sensibleHeat.computeConvectiveTransferCoefficient(airTemperature, windVelocity, leafLength, criticalReynoldsNumber, prandtlNumber);
 			double sensibleHeatTransferCoefficient = sensibleHeat.computeSensibleHeatTransferCoefficient(convectiveTransferCoefficient, leafSide);
