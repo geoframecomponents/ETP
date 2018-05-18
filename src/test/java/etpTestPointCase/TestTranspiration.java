@@ -2,7 +2,9 @@ package etpTestPointCase;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 
+import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.data.simple.SimpleFeatureCollection;
+import org.jgrasstools.gears.io.rasterreader.OmsRasterReader;
 import org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
@@ -29,11 +31,19 @@ public class TestTranspiration{
         String fId = "ID";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
+        
+        OmsRasterReader DEMreader = new OmsRasterReader();
+		DEMreader.file = "resources/Input/dataET_raster/mybasin.asc";
+		DEMreader.fileNovalue = -9999.0;
+		DEMreader.geodataNovalue = Double.NaN;
+		DEMreader.process();
+		GridCoverage2D digitalElevationModel = DEMreader.outRaster;
 
         String inPathToTemperature 		="resources/Input/dataET_point/AirTemperature.csv";
         String inPathToWind 			="resources/Input/dataET_point/WindVelocity.csv";
         String inPathToRelativeHumidity ="resources/Input/dataET_point/RelativeHumidity.csv";
-        String inPathToSWRad 			="resources/Input/dataET_point/ShortWaveRadiation.csv";
+        String inPathToShortWaveRadiationDirect 			="resources/Input/dataET_point/ShortWaveRadiationDirect.csv";
+        String inPathToShortWaveRadiationDiffuse		="resources/Input/dataET_point/ShortWaveRadiationDiffuse.csv";
         String inPathToLWRad 			="resources/Input/dataET_point/LongWaveRadiation.csv";
         String inPathToPressure 		="resources/Input/dataET_point/AtmosphericPressure.csv";
         String inPathToLai 				="resources/Input/dataET_point/LeafAreaIndex.csv";
@@ -44,12 +54,12 @@ public class TestTranspiration{
         OmsTimeSeriesIteratorReader temperatureReader	= getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader windReader 		 	= getTimeseriesReader(inPathToWind, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader humidityReader 		= getTimeseriesReader(inPathToRelativeHumidity, fId, startDate, endDate, timeStepMinutes);
-        OmsTimeSeriesIteratorReader shortwaveReader 	= getTimeseriesReader(inPathToSWRad, fId, startDate, endDate,timeStepMinutes);
+        OmsTimeSeriesIteratorReader shortwaveReaderDirect 	= getTimeseriesReader(inPathToShortWaveRadiationDirect, fId, startDate, endDate,timeStepMinutes);
+        OmsTimeSeriesIteratorReader shortwaveReaderDiffuse 	= getTimeseriesReader(inPathToShortWaveRadiationDiffuse, fId, startDate, endDate,timeStepMinutes);
         OmsTimeSeriesIteratorReader longwaveReader 		= getTimeseriesReader(inPathToLWRad, fId, startDate, endDate,timeStepMinutes);
         OmsTimeSeriesIteratorReader pressureReader 		= getTimeseriesReader(inPathToPressure, fId, startDate, endDate,timeStepMinutes);
         OmsTimeSeriesIteratorReader leafAreaIndexReader	= getTimeseriesReader(inPathToLai, fId, startDate, endDate,timeStepMinutes);      
-        
-        
+                
 		OmsShapefileFeatureReader centroidsReader 		= new OmsShapefileFeatureReader();
         centroidsReader.file = inPathToCentroids;
 		centroidsReader.readFeatureCollection();
@@ -69,11 +79,12 @@ public class TestTranspiration{
 		leafTemperatureWriter.fileNovalue="-9999";
 		
 		OmsTranspiration Transpiration = new OmsTranspiration();
-		Transpiration.inStations = stationsFC;
-		Transpiration.fStationsid="id";
-		Transpiration.fPointZ="elevation";
+		Transpiration.inCentroids = stationsFC;
+		Transpiration.idCentroids="id";
+		Transpiration.centroidElevation="elevation";
+		
+        Transpiration.inDem = digitalElevationModel; 
          
-
         while(temperatureReader.doProcess ) {
         	temperatureReader.nextRecord();
 
@@ -81,7 +92,8 @@ public class TestTranspiration{
             Transpiration.inAirTemperature = id2ValueMap;
             Transpiration.doHourly = true;
             Transpiration.area = 1.0;	
-            
+            Transpiration.tStartDate = startDate;
+
            
             windReader.nextRecord();
             id2ValueMap = windReader.outData;
@@ -91,9 +103,13 @@ public class TestTranspiration{
             id2ValueMap = humidityReader.outData;
             Transpiration.inRelativeHumidity = id2ValueMap;
 
-            shortwaveReader.nextRecord();
-            id2ValueMap = shortwaveReader.outData;
-            Transpiration.inShortWaveRadiation = id2ValueMap;
+            shortwaveReaderDirect.nextRecord();
+            id2ValueMap = shortwaveReaderDirect.outData;
+            Transpiration.inShortWaveRadiationDirect = id2ValueMap;
+            
+            shortwaveReaderDiffuse.nextRecord();
+            id2ValueMap = shortwaveReaderDiffuse.outData;
+            Transpiration.inShortWaveRadiationDiffuse = id2ValueMap;
             
             longwaveReader.nextRecord();
             id2ValueMap = longwaveReader.outData;
@@ -125,7 +141,8 @@ public class TestTranspiration{
         temperatureReader.close();
         windReader.close();
         humidityReader.close();
-        shortwaveReader.close();
+        shortwaveReaderDirect.close();
+        shortwaveReaderDiffuse.close();
         longwaveReader.close();
         pressureReader.close();
     }
