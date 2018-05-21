@@ -10,6 +10,8 @@ public class TestTranspirationRaster {
 	GridCoverage2D outTranspirationDataGrid = null;
 	@Test
 	public void Test() throws Exception {
+		String startDate= "2016-06-01 00:00";
+		
 		OmsRasterReader demElevationReader = new OmsRasterReader();
 		demElevationReader.file = "resources/Input/dataET_raster/mybasin.asc";
 		demElevationReader.fileNovalue = -9999.0;
@@ -24,12 +26,19 @@ public class TestTranspirationRaster {
 		airTemperatureReader.process();
 		GridCoverage2D airTemperature = airTemperatureReader.outRaster;
 		
-		OmsRasterReader shortWaveRadiationReader = new OmsRasterReader();
-		shortWaveRadiationReader.file = "resources/Input/dataET_raster/SWRB_raster.asc";
-		shortWaveRadiationReader.fileNovalue = -9999.0;
-		shortWaveRadiationReader.geodataNovalue = Double.NaN;
-		shortWaveRadiationReader.process();
-		GridCoverage2D shortWaveRadiation = shortWaveRadiationReader.outRaster;
+		OmsRasterReader shortWaveRadiationDirectReader = new OmsRasterReader();
+		shortWaveRadiationDirectReader.file = "resources/Input/dataET_raster/SWRB_raster.asc";
+		shortWaveRadiationDirectReader.fileNovalue = -9999.0;
+		shortWaveRadiationDirectReader.geodataNovalue = Double.NaN;
+		shortWaveRadiationDirectReader.process();
+		GridCoverage2D shortWaveRadiationDirect = shortWaveRadiationDirectReader.outRaster;
+
+		OmsRasterReader shortWaveRadiationDiffuseReader = new OmsRasterReader();
+		shortWaveRadiationDiffuseReader.file = "resources/Input/dataET_raster/SWRB_raster.asc";
+		shortWaveRadiationDiffuseReader.fileNovalue = -9999.0;
+		shortWaveRadiationDiffuseReader.geodataNovalue = Double.NaN;
+		shortWaveRadiationDiffuseReader.process();
+		GridCoverage2D shortWaveRadiationDiffuse = shortWaveRadiationDiffuseReader.outRaster;
 		
 		OmsRasterReader longWaveRadiationReader = new OmsRasterReader();
 		longWaveRadiationReader.file = "resources/Input/dataET_raster/LwrbDownWellingRaster.asc";
@@ -70,7 +79,8 @@ public class TestTranspirationRaster {
 
 		TranspirationRaster.inAirTemperatureGrid = airTemperature;
 		TranspirationRaster.inDemElevationGrid = demElevation;
-		TranspirationRaster.inShortWaveRadiationGrid= shortWaveRadiation;
+		TranspirationRaster.inShortWaveRadiationDirectGrid= shortWaveRadiationDirect;
+		TranspirationRaster.inShortWaveRadiationDiffuseGrid= shortWaveRadiationDiffuse;
 		TranspirationRaster.inLongWaveRadiationGrid = longWaveRadiation;
 		TranspirationRaster.inRelativeHumidityGrid = relativeHumidity;
 		TranspirationRaster.inWindVelocityGrid = windVelocity;
@@ -79,6 +89,9 @@ public class TestTranspirationRaster {
 		TranspirationRaster.doHourly=true;
 			
 		TranspirationRaster.area = 1.0;	
+		TranspirationRaster.tStartDate = startDate;
+		TranspirationRaster.doHourly = false;
+
 		
 		TranspirationRaster.process();
 		

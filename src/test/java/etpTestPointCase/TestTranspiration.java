@@ -42,8 +42,8 @@ public class TestTranspiration{
         String inPathToTemperature 		="resources/Input/dataET_point/AirTemperature.csv";
         String inPathToWind 			="resources/Input/dataET_point/WindVelocity.csv";
         String inPathToRelativeHumidity ="resources/Input/dataET_point/RelativeHumidity.csv";
-        String inPathToShortWaveRadiationDirect 			="resources/Input/dataET_point/ShortWaveRadiationDirect.csv";
-        String inPathToShortWaveRadiationDiffuse		="resources/Input/dataET_point/ShortWaveRadiationDiffuse.csv";
+        String inPathToShortWaveRadiationDirect="resources/Input/dataET_point/ShortWaveRadiationDirect.csv";
+        String inPathToShortWaveRadiationDiffuse="resources/Input/dataET_point/ShortWaveRadiationDiffuse.csv";
         String inPathToLWRad 			="resources/Input/dataET_point/LongWaveRadiation.csv";
         String inPathToPressure 		="resources/Input/dataET_point/AtmosphericPressure.csv";
         String inPathToLai 				="resources/Input/dataET_point/LeafAreaIndex.csv";
@@ -91,7 +91,6 @@ public class TestTranspiration{
             HashMap<Integer, double[]> id2ValueMap = temperatureReader.outData;
             Transpiration.inAirTemperature = id2ValueMap;
             Transpiration.doHourly = true;
-            Transpiration.area = 1.0;	
             Transpiration.tStartDate = startDate;
 
            

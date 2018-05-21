@@ -2,7 +2,6 @@ package etpClasses;
 
 import static java.lang.Math.pow;
 import static java.lang.Math.exp;
-import static java.lang.Math.sqrt;
 
 public class RadiationMethods {
 	double diffuseExtinctionCoefficient = 0.719;

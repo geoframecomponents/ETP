@@ -6,6 +6,7 @@ import java.awt.image.WritableRaster;
 import java.util.LinkedHashMap;
 import static java.lang.Math.abs;
 import static java.lang.Math.pow;
+
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.WritableRandomIter;
 import oms3.annotations.Author;
@@ -23,10 +24,17 @@ import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.jgrasstools.gears.libs.modules.JGTModel;
+import org.jgrasstools.gears.utils.CrsUtilities;
 import org.jgrasstools.gears.utils.RegionMap;
 import org.jgrasstools.gears.utils.coverage.CoverageUtilities;
+import org.jgrasstools.gears.utils.geometry.GeometryUtilities;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Point;
 
 /*
  * GNU GPL v3 License
@@ -67,11 +75,18 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 	
 	@Description("sw.")
 	@In
-	public GridCoverage2D inShortWaveRadiationGrid;
+	public GridCoverage2D inShortWaveRadiationDirectGrid;
 	@Description("SW")
-	double shortWaveRadiation;
-	private static final double defaultShortWaveRadiation = 0.0;
+	double shortWaveRadiationDirect;
+	private static final double defaultShortWaveRadiationDirect = 0.0;
 
+	@Description("sw.")
+	@In
+	public GridCoverage2D inShortWaveRadiationDiffuseGrid;
+	@Description("SW")
+	double shortWaveRadiationDiffuse;
+	
+	
 	@Description("lw.")
 	@In
 	public GridCoverage2D inLongWaveRadiationGrid;
@@ -138,9 +153,13 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 	int step;
 	public int time;
 	double nullValue = -9999.0;
+	
+	@Description("The first day of the simulation.")
+	@In
+	public String tStartDate;
 
 	CoordinateReferenceSystem targetCRS = DefaultGeographicCRS.WGS84;
-	LinkedHashMap<Integer, Coordinate> stationCoordinates;
+	LinkedHashMap<Integer, Coordinate> cellGrid;
 	
 	// OUTPUT
 	@Description("The output diffuse radiation map")
@@ -150,7 +169,8 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 	
 	WritableRaster demElevationMap;
 	WritableRaster temperatureMap;
-	WritableRaster shortWaveRadiationMap;
+	WritableRaster shortWaveRadiationDirectMap;
+	WritableRaster shortWaveRadiationDiffuseMap;
 	WritableRaster longWaveRadiationMap;
 	WritableRaster relativeHumidityMap;
 	WritableRaster windVelocityMap;
@@ -160,88 +180,119 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 	int rows;
 	double dx;
 	RegionMap regionMap;
-	
+	public GridGeometry2D inInterpolationGrid;
+	public GridCoverage2D inGridCoverage2D = null;
+	WritableRaster demWR;
+	DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm").withZone(DateTimeZone.UTC);
+	double elevation;	
 
 	// METHODS FROM CLASSES
 	SensibleHeatMethods sensibleHeat = new SensibleHeatMethods();
 	LatentHeatMethods latentHeat = new LatentHeatMethods();
 	PressureMethods pressure = new PressureMethods(); 
-	RadiationMethods longWaveRadiationBalance = new RadiationMethods();
+	RadiationMethods radiationMethods = new RadiationMethods();
+	SolarGeometry solarGeometry = new SolarGeometry();
 	
-	//private WritableRaster outWR;
-
-	public GridGeometry2D inInterpolationGrid;
-	public GridCoverage2D inGridCoverage2D = null;
-	WritableRaster demWR;
-	double elevation;
-
 	@Execute
 	
 	public void process() throws Exception {
-		if(step==0){
-		// transform the GrifCoverage2D maps into writable rasters
-		demElevationMap 		=	mapsTransform(inDemElevationGrid);	
-		temperatureMap			=	mapsTransform(inAirTemperatureGrid);	
-		shortWaveRadiationMap	=	mapsTransform(inShortWaveRadiationGrid);
-		longWaveRadiationMap	=	mapsTransform(inLongWaveRadiationGrid);
-		relativeHumidityMap		=	mapsTransform(inRelativeHumidityGrid);
-		windVelocityMap			=	mapsTransform(inWindVelocityGrid);
-		atmosphericPressureMap	=	mapsTransform(inAtmosphericPressureGrid);
-		leafAreaIndexMap		=   mapsTransform(inLeafAreaIndexGrid);
+		if (doHourly == true) {
+			time =3600;
+			} else {
+			time = 86400;
+			}
+		DateTime startDateTime = formatter.parseDateTime(tStartDate);
+		DateTime date=(doHourly==false)?startDateTime.plusDays(step).plusHours(12):startDateTime.plusHours(step);
+		Leaf propertyOfLeaf = new Leaf();
+		double poreRadius = propertyOfLeaf.poreRadius;
+		double poreArea = propertyOfLeaf.poreArea;
+		double poreDepth = propertyOfLeaf.poreDepth;
+		double poreDensity = propertyOfLeaf.poreDensity;
+		double leafLength = propertyOfLeaf.length;
+		int leafSide = propertyOfLeaf.side;
+		// Shortwave property
+		double longWaveEmittance = propertyOfLeaf.longWaveEmittance;
+		
+		
+		demElevationMap 			=	mapsTransform(inDemElevationGrid);	
+		temperatureMap				=	mapsTransform(inAirTemperatureGrid);	
+		shortWaveRadiationDirectMap	=	mapsTransform(inShortWaveRadiationDirectGrid);
+		shortWaveRadiationDiffuseMap=	mapsTransform(inShortWaveRadiationDiffuseGrid);
+		longWaveRadiationMap		=	mapsTransform(inLongWaveRadiationGrid);
+		if (relativeHumidityMap!= null) relativeHumidityMap			=	mapsTransform(inRelativeHumidityGrid);
+		if (windVelocityMap!= null) windVelocityMap				=	mapsTransform(inWindVelocityGrid);
+		if (atmosphericPressureMap!= null) atmosphericPressureMap		=	mapsTransform(inAtmosphericPressureGrid);
+		if (leafAreaIndexMap!= null)leafAreaIndexMap			=   mapsTransform(inLeafAreaIndexGrid);
 
 		// get the dimension of the maps
+		CoordinateReferenceSystem sourceCRS = inDemElevationGrid.getCoordinateReferenceSystem2D();
 		rasterGrid=mapsTransform(inAirTemperatureGrid);
 		regionMap = CoverageUtilities.getRegionParamsFromGridCoverage(inAirTemperatureGrid);
 		columns = regionMap.getCols();
 		rows = regionMap.getRows();
 		dx=regionMap.getXres();
-		}
 
-	WritableRaster outSoWritableRaster = CoverageUtilities.createDoubleWritableRaster(columns, rows, null, null, null);
-	WritableRandomIter outRasterIter = RandomIterFactory.createWritable(outSoWritableRaster, null);       
+		GridGeometry2D inDemGridGeo = inDemElevationGrid.getGridGeometry();
+		cellGrid = getCoordinate(inDemGridGeo);
+		WritableRaster outSoWritableRaster = CoverageUtilities.createDoubleWritableRaster(columns, rows, null, null, null);
+		WritableRandomIter outRasterIter = RandomIterFactory.createWritable(outSoWritableRaster, null);     
+		int k=0;
+		for( int row = 1; row < rows - 1; row++ ) {
+			for( int column = 1; column < columns - 1; column++ ) {
+				demElevation 		= 	demElevationMap.getSampleDouble(column, row, 0);
+				if (demElevation == (nullValue)) {elevation = defaultDemElevation;}
+				Coordinate coordinate = (Coordinate) cellGrid.get(k);
+				k++;
+				Point [] idPoint=getPoint(coordinate,sourceCRS, targetCRS);			
+				double longitude = (idPoint[0].getX());
+				double latitude = Math.toRadians(idPoint[0].getY());
+				double solarElevationAngle = solarGeometry.getSolarElevationAngle(date, latitude, longitude, doHourly);	
+				
+				airTemperature 		= 	temperatureMap.getSampleDouble(column, row, 0)+273.0;
+				if (airTemperature == (nullValue+273.0)) {airTemperature = defaultAirTemperature;}		
+				leafTemperature = airTemperature;
+			
+				shortWaveRadiationDirect 	= 	shortWaveRadiationDirectMap.getSampleDouble(column, row, 0);
+				if (shortWaveRadiationDirect == nullValue) {shortWaveRadiationDirect = defaultShortWaveRadiationDirect;}   
+				shortWaveRadiationDiffuse 	= 	shortWaveRadiationDiffuseMap.getSampleDouble(column, row, 0);
+				if (shortWaveRadiationDiffuse == nullValue) {shortWaveRadiationDiffuse = 0.159*shortWaveRadiationDirect;}   
 
-	for( int row = 1; row < rows - 1; row++ ) {
-		for( int column = 1; column < columns - 1; column++ ) {
-			
-			if (doHourly == true) {
-				time =3600;
-				} else {
-				time = 86400;
-				}
-			Leaf propertyOfLeaf = new Leaf();
-			double poreRadius = propertyOfLeaf.poreRadius;
-			double poreArea = propertyOfLeaf.poreArea;
-			double poreDepth = propertyOfLeaf.poreDepth;
-			double poreDensity = propertyOfLeaf.poreDensity;
-			double leafLength = propertyOfLeaf.length;
-			int leafSide = propertyOfLeaf.side;
-			// Shortwave property
-			double shortWaveAbsorption = propertyOfLeaf.shortWaveAbsorption;	
-			double shortWaveReflectance = propertyOfLeaf.shortWaveReflectance;	
-			double shortWaveTransmittance = propertyOfLeaf.shortWaveTransmittance;
-			// Longwave property
-			double longWaveAbsorption = propertyOfLeaf.longWaveAbsorption;	
-			double longWaveReflectance = propertyOfLeaf.longWaveReflectance;	
-			double longWaveTransmittance = propertyOfLeaf.longWaveTransmittance;
-			double longWaveEmittance = propertyOfLeaf.longWaveEmittance;
-			
-			airTemperature 		= 	temperatureMap.getSampleDouble(column, row, 0)+273.0;
-			if (airTemperature == (nullValue+273.0)) {airTemperature = defaultAirTemperature;}
-			
-			leafTemperature = airTemperature + 2.0;
-			
-			demElevation 		= 	demElevationMap.getSampleDouble(column, row, 0);
-			if (demElevation == (nullValue)) {elevation = defaultDemElevation;}
-			
-			shortWaveRadiation 	= 	shortWaveRadiationMap.getSampleDouble(column, row, 0);
-			if (shortWaveRadiation == nullValue) {shortWaveRadiation = defaultShortWaveRadiation;}   
+				longWaveRadiation 	= 	longWaveRadiationMap.getSampleDouble(column, row, 0);
+				if (longWaveRadiation == nullValue) {longWaveRadiation = 1 * stefanBoltzmannConstant * pow (airTemperature, 4);}
 
-			double absorbedRadiation = shortWaveRadiation * shortWaveAbsorption;
+				relativeHumidity= defaultRelativeHumidity;
+				if (relativeHumidityMap!= null)
+				relativeHumidity = relativeHumidityMap.getSampleDouble(column, row, 0);
+				if (relativeHumidity == nullValue) relativeHumidity=defaultRelativeHumidity;
+			
+				windVelocity= defaultWindVelocity;
+				if (windVelocityMap!= null)
+				windVelocity = windVelocityMap.getSampleDouble(column, row, 0);
+				if (windVelocity == nullValue) windVelocity=defaultWindVelocity;
+			
+				atmosphericPressure= pressure.computePressure(defaultAtmosphericPressure, massAirMolecule, gravityConstant, elevation,boltzmannConstant, airTemperature);
+				if (atmosphericPressureMap!= null)
+				atmosphericPressure = atmosphericPressureMap.getSampleDouble(column, row, 0);
+				if (atmosphericPressure == nullValue) atmosphericPressure=pressure.computePressure(defaultAtmosphericPressure, massAirMolecule, gravityConstant, elevation,boltzmannConstant, airTemperature);
+			
 
-			longWaveRadiation 	= 	longWaveRadiationMap.getSampleDouble(column, row, 0);
-			if (longWaveRadiation == nullValue) {longWaveRadiation = 1 * stefanBoltzmannConstant * pow (airTemperature, 4);}
+				leafAreaIndex= defaultLeafAreaIndex;
+				if (leafAreaIndexMap!= null)
+				leafAreaIndex = leafAreaIndexMap.getSampleDouble(column, row, 0);
+				leafAreaIndex=(leafAreaIndex>100)?defaultLeafAreaIndex:leafAreaIndex/10;
+				if (leafAreaIndex == nullValue) leafAreaIndex=defaultLeafAreaIndex;		
+			
+			/*	windVelocity 		= 	windVelocityMap.getSampleDouble(column, row, 0);
+			if (windVelocity == nullValue) {windVelocity = defaultWindVelocity;}   
 
-			relativeHumidity 	= 	relativeHumidityMap.getSampleDouble(column, row, 0);
+			atmosphericPressure = 	atmosphericPressureMap.getSampleDouble(column, row, 0);
+			if (atmosphericPressure == nullValue) {atmosphericPressure = pressure.computePressure(defaultAtmosphericPressure, massAirMolecule, gravityConstant, elevation,boltzmannConstant, airTemperature);}	
+						
+			leafAreaIndex = 	leafAreaIndexMap.getSampleDouble(column, row, 0);
+			if (leafAreaIndex == nullValue) {leafAreaIndex = defaultLeafAreaIndex;}	
+			else if (leafAreaIndex > 100) {leafAreaIndex = defaultLeafAreaIndex;}	
+			else {leafAreaIndex = leafAreaIndex/10;}*/
+		/*	relativeHumidity 	= 	relativeHumidityMap.getSampleDouble(column, row, 0);
 			if (relativeHumidity == nullValue) {relativeHumidity = defaultRelativeHumidity;}
 
 			windVelocity 		= 	windVelocityMap.getSampleDouble(column, row, 0);
@@ -253,65 +304,68 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 			leafAreaIndex = 	leafAreaIndexMap.getSampleDouble(column, row, 0);
 			if (leafAreaIndex == nullValue) {leafAreaIndex = defaultLeafAreaIndex;}	
 			else if (leafAreaIndex > 100) {leafAreaIndex = defaultLeafAreaIndex;}	
-			else {leafAreaIndex = leafAreaIndex/10;}
+			else {leafAreaIndex = leafAreaIndex/10;}*/
 			
-			double saturationVaporPressure = pressure.computeSaturationVaporPressure(airTemperature, waterMolarMass, latentHeatEvaporation, molarGasConstant);
-			double vaporPressure = relativeHumidity * saturationVaporPressure/100.0;
-			double delta = pressure.computeDelta(airTemperature, waterMolarMass, latentHeatEvaporation, molarGasConstant);
+				double saturationVaporPressure = pressure.computeSaturationVaporPressure(airTemperature, waterMolarMass, latentHeatEvaporation, molarGasConstant);
+				double vaporPressure = relativeHumidity * saturationVaporPressure/100.0;
+				double delta = pressure.computeDelta(airTemperature, waterMolarMass, latentHeatEvaporation, molarGasConstant);
 			
-			double convectiveTransferCoefficient = sensibleHeat.computeConvectiveTransferCoefficient(airTemperature, windVelocity, leafLength, criticalReynoldsNumber, prandtlNumber);
-			double sensibleHeatTransferCoefficient = sensibleHeat.computeSensibleHeatTransferCoefficient(convectiveTransferCoefficient, leafSide);
-			double latentHeatTransferCoefficient = latentHeat.computeLatentHeatTransferCoefficient(airTemperature, atmosphericPressure, leafSide, convectiveTransferCoefficient, airSpecificHeat, 
+				double convectiveTransferCoefficient = sensibleHeat.computeConvectiveTransferCoefficient(airTemperature, windVelocity, leafLength, criticalReynoldsNumber, prandtlNumber);
+				double sensibleHeatTransferCoefficient = sensibleHeat.computeSensibleHeatTransferCoefficient(convectiveTransferCoefficient, leafSide);
+				double latentHeatTransferCoefficient = latentHeat.computeLatentHeatTransferCoefficient(airTemperature, atmosphericPressure, leafSide, convectiveTransferCoefficient, airSpecificHeat, 
 					airDensity, molarGasConstant, molarVolume, waterMolarMass, latentHeatEvaporation, poreDensity, poreArea, poreDepth, poreRadius);
 					
-				
-			
-			shortWaveRadiation = absorbedRadiation;
-			double residual = 1.0;
-			double latentHeatFlux = 0;
-			double sensibleHeatFlux = 0;
-			double netLongWaveRadiation = 0;
-			double leafTemperatureSun = leafTemperature;
-			double TranspirationSun = 0;
-			double TranspirationShadow = 0;
-			int iterator = 0;
-			while(abs(residual) > 1 && iterator <= 5) 
-			{
-				sensibleHeatFlux = sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSun, airTemperature);
-				latentHeatFlux = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-				netLongWaveRadiation = longWaveRadiationBalance.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureSun, stefanBoltzmannConstant);
-				residual = (shortWaveRadiation - netLongWaveRadiation) - sensibleHeatFlux - latentHeatFlux;
-				leafTemperatureSun = computeLeafTemperature(leafSide, longWaveEmittance, sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
-				iterator++;
-				}
-			TranspirationSun = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-						
-			shortWaveRadiation = absorbedRadiation*0.2;
-			double residualSh = 1.0;
-			double latentHeatFluxSh = 0;
-			double sensibleHeatFluxSh = 0;
-			double netLongWaveRadiationSh = 0;
-			double leafTemperatureSh = leafTemperature;
-			iterator = 0;
-			while(abs(residual) > 1 && iterator <= 5)
-			{
-				sensibleHeatFluxSh = sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSh, airTemperature);
-				latentHeatFluxSh = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-				netLongWaveRadiationSh = longWaveRadiationBalance.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureSh, stefanBoltzmannConstant);
-				residualSh = (shortWaveRadiation- netLongWaveRadiationSh) - sensibleHeatFluxSh - latentHeatFluxSh;
-				leafTemperatureSh = computeLeafTemperature(leafSide, longWaveEmittance,sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiation,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
-				iterator++;
-				}
-			TranspirationShadow = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);			
-			
-			double TranspirationOut = (TranspirationSun*area + TranspirationShadow*(leafAreaIndex-area))*time/latentHeatEvaporation;
+				double shortWaveRadiationInSun = radiationMethods.computeAbsordebRadiationSunlit(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect,shortWaveRadiationDiffuse);
+				double residual = 1.0;
+				double latentHeatFlux = 0;
+				double sensibleHeatFlux = 0;
+				double netLongWaveRadiation = 0;
+				double leafTemperatureSun = leafTemperature;
+				double TranspirationSun = 0;
+				double TranspirationShadow = 0;
+				int iterator = 0;
+				double leafInSunlit = radiationMethods.computeSunlitLeafAreaIndex(leafAreaIndex, solarElevationAngle);
 
-			outRasterIter.setSample(column, row, 0,TranspirationOut);
+				while(abs(residual) > 1 && iterator <= 2) 
+				{
+					sensibleHeatFlux = sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSun, airTemperature);
+					latentHeatFlux = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
+					netLongWaveRadiation = radiationMethods.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureSun, stefanBoltzmannConstant);
+					residual = (shortWaveRadiationInSun - netLongWaveRadiation) - sensibleHeatFlux - latentHeatFlux;
+					leafTemperatureSun = computeLeafTemperature(leafSide, longWaveEmittance, sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiationInSun,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
+					iterator++;
+				}
+		TranspirationSun = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
+						
+		double shortWaveRadiationInShadow = radiationMethods.computeAbsordebRadiationShadow(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect,shortWaveRadiationDiffuse);
+		double residualSh = 10.0;
+		double latentHeatFluxSh = 0;
+		double sensibleHeatFluxSh = 0;
+		double netLongWaveRadiationSh = 0;
+		double leafTemperatureSh = leafTemperature;
+		iterator = 0;
+		
+		while(abs(residualSh) > 1 && iterator <= 2) 
+			{
+			sensibleHeatFluxSh = sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSh, airTemperature);
+			latentHeatFluxSh = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
+			netLongWaveRadiationSh = radiationMethods.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureSh, stefanBoltzmannConstant);
+			residualSh = (shortWaveRadiationInShadow- netLongWaveRadiationSh) - sensibleHeatFluxSh - latentHeatFluxSh;
+			leafTemperatureSh = computeLeafTemperature(leafSide, longWaveEmittance,sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiationInShadow,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
+			iterator++;
+			}
+		TranspirationShadow = latentHeat.computeLatentHeatFlux(delta, leafTemperatureSh, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
+		
+		double TotalTranspiration = ((leafInSunlit*TranspirationSun) + (TranspirationShadow*(leafAreaIndex-leafInSunlit)))*(time/latentHeatEvaporation);
+		
+		outRasterIter.setSample(column, row, 0,TotalTranspiration);
+	
 			}
 		}
 	CoverageUtilities.setNovalueBorder(outSoWritableRaster);
 	outTranspirationGrid = CoverageUtilities.buildCoverage("Transpiration", outSoWritableRaster,regionMap, inAirTemperatureGrid.getCoordinateReferenceSystem());
-	step++;
+	//step++;
+	
 	}
 
 private WritableRaster mapsTransform  ( GridCoverage2D inValues){	
@@ -319,6 +373,12 @@ private WritableRaster mapsTransform  ( GridCoverage2D inValues){
 	WritableRaster inValuesWR = CoverageUtilities.replaceNovalue(inValuesRenderedImage, -9999.0);
 	inValuesRenderedImage = null;
 	return inValuesWR;
+}
+private Point[] getPoint(Coordinate coordinate, CoordinateReferenceSystem sourceCRS, CoordinateReferenceSystem targetCRS)
+		throws Exception{
+	Point[] point = new Point[] { GeometryUtilities.gf().createPoint(coordinate) };
+	CrsUtilities.reproject(sourceCRS, targetCRS, point);
+	return point;
 }
 
 private double computeLeafTemperature(
@@ -338,5 +398,31 @@ private double computeLeafTemperature(
 			(1/(sensibleHeatTransferCoefficient + latentHeatTransferCoefficient * delta +	
 			side * emissivity * stefanBoltzmannConstant * 4 * pow(airTemperature,3)));
 	return leafTemperature;	
+}
+private LinkedHashMap<Integer, Coordinate> getCoordinate(GridGeometry2D grid) {
+	LinkedHashMap<Integer, Coordinate> out = new LinkedHashMap<Integer, Coordinate>();
+	int count = 0;
+	RegionMap regionMap = CoverageUtilities.gridGeometry2RegionParamsMap(grid);
+	double cols = regionMap.getCols();
+	double rows = regionMap.getRows();
+	double south = regionMap.getSouth();
+	double west = regionMap.getWest();
+	double xres = regionMap.getXres();
+	double yres = regionMap.getYres();
+	double northing = south;
+	double easting = west;
+	for (int i = 0; i < cols; i++) {
+		easting = easting + xres;
+		for (int j = 0; j < rows; j++) {
+			northing = northing + yres;
+			Coordinate coordinate = new Coordinate();
+			coordinate.x = west + i * xres;
+			coordinate.y = south + j * yres;
+			out.put(count, coordinate);
+			count++;
+		}
+	}
+
+	return out;
 }
 }
