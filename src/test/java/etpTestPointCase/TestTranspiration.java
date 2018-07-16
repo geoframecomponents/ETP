@@ -25,9 +25,9 @@ import org.junit.*;
 public class TestTranspiration{
 	@Test
     public void Test() throws Exception {
-		String startDate= "2016-06-01 00:00";
-        String endDate	= "2016-08-01 00:00";
-        int timeStepMinutes = 60*24;
+		String startDate= "2016-01-15 00:00";
+        String endDate	= "2016-12-16 00:00";
+        int timeStepMinutes = 60;
         String fId = "ID";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);

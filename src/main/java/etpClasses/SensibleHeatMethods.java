@@ -14,8 +14,8 @@ public class SensibleHeatMethods {
 		// from Incropera et al, 2006
 		double c3 = criticalReynoldsNumber - reynoldsNumber;
 		double c2 = (reynoldsNumber + criticalReynoldsNumber - abs(c3))/2;
-		double c1 = 0.037 * pow(c2,4/5) - 0.664 * pow(c2,1/2);
-		double nusseltNumber = (0.037 * pow(reynoldsNumber,4/5) - c1) * pow(prandtlNumber,1/3);
+		double c1 = 0.037 * pow(c2,0.8) - 0.664 * pow(c2,0.5);
+		double nusseltNumber = (0.037 * pow(reynoldsNumber,0.8) - c1) * pow(prandtlNumber,0.33);
 		// Formula from Schymanski and Or, 2017
 		double convectiveTransferCoefficient = (thermalConductivity * nusseltNumber)/leafLength;
 		return convectiveTransferCoefficient;
