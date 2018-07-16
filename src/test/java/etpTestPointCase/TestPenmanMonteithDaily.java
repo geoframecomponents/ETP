@@ -18,8 +18,8 @@ public class TestPenmanMonteithDaily {
     public void Test() throws Exception {
         // PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.err);
         // URL rainUrl = this.getClass().getClassLoader().getResource("etp_in_data_rain.csv");
-    	String startDate 	= "2016-06-01 00:00";
-        String endDate		= "2016-08-01 00:00";
+    	String startDate= "2016-01-15 00:00";
+        String endDate	= "2016-12-16 00:00";
         int timeStepMinutes = 60*24;
         String fId 			= "ID";
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);

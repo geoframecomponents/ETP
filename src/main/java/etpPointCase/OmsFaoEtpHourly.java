@@ -106,11 +106,8 @@ public class OmsFaoEtpHourly extends JGTModel {
 
     @Execute
     public void process() throws Exception {
-
-
         outFaoEtp = new HashMap<Integer, double[]>();
-
-        Set<Entry<Integer, double[]>> entrySet = inTemp.entrySet();
+        Set<Entry<Integer, double[]>> entrySet = inNetradiation.entrySet();
         for( Entry<Integer, double[]> entry : entrySet ) {
             Integer basinId = entry.getKey();
 
