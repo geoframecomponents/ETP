@@ -29,7 +29,7 @@ public class TestFaoEtpHourly{
         // URL rainUrl = this.getClass().getClassLoader().getResource("etp_in_data_rain.csv");
 		String startDate= "2016-01-15 00:00";
         String endDate	= "2016-12-16 00:00";
-        int timeStepMinutes = 60*24;
+        int timeStepMinutes = 60;
         String fId = "ID";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
@@ -38,20 +38,23 @@ public class TestFaoEtpHourly{
         String inPathToWind 			="resources/Input/dataET_point/WindVelocity.csv";
         String inPathToRelativeHumidity ="resources/Input/dataET_point/RelativeHumidity.csv";
         String inPathToNetRad 			="resources/Input/dataET_point/NetRadiation.csv";
+        String inPathToPressure 		="resources/Input/dataET_point/AtmosphericPressure.csv";
+
         
 
         OmsTimeSeriesIteratorReader tempReader = getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader windReader = getTimeseriesReader(inPathToWind, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader humReader = getTimeseriesReader(inPathToRelativeHumidity, fId, startDate, endDate, timeStepMinutes);
-        OmsTimeSeriesIteratorReader netradReader = getTimeseriesReader(inPathToNetRad, fId, startDate, endDate,
-                timeStepMinutes);
+        OmsTimeSeriesIteratorReader netradReader = getTimeseriesReader(inPathToNetRad, fId, startDate, endDate, timeStepMinutes);
+        OmsTimeSeriesIteratorReader pressureReader 		= getTimeseriesReader(inPathToPressure, fId, startDate, endDate,timeStepMinutes);
+
 
         OmsFaoEtpHourly faoEtpHourly = new OmsFaoEtpHourly();
 
         while( tempReader.doProcess ) {
             tempReader.nextRecord();
 
-            tempReader.nextRecord();
+         //   tempReader.nextRecord();
             HashMap<Integer, double[]> id2ValueMap = tempReader.outData;
             faoEtpHourly.inTemp = id2ValueMap;
 
@@ -68,6 +71,10 @@ public class TestFaoEtpHourly{
             netradReader.nextRecord();
             id2ValueMap = netradReader.outData;
             faoEtpHourly.inNetradiation = id2ValueMap;
+            
+            pressureReader.nextRecord();
+            id2ValueMap = pressureReader.outData;
+            faoEtpHourly.inPressure = id2ValueMap;
 
             faoEtpHourly.pm = pm;
             faoEtpHourly.process();
@@ -78,6 +85,8 @@ public class TestFaoEtpHourly{
         windReader.close();
         humReader.close();
         netradReader.close();
+        pressureReader.close();
+
 
     }
 
@@ -89,7 +98,7 @@ public class TestFaoEtpHourly{
         reader.tStart =startDate;
         reader.tTimestep = timeStepMinutes;
         reader.tEnd = endDate;
-        reader.fileNovalue = "-9999";
+        reader.fileNovalue = "-9999.0";
         reader.initProcess();
         return reader;
     }

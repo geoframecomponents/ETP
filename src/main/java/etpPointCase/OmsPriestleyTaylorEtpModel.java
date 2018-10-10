@@ -171,7 +171,7 @@ public class OmsPriestleyTaylorEtpModel extends JGTModel {
 					}
 				double pressure = defaultPressure;
 				if (inPressure != null) {
-					double p = inPressure.get( basinId)[0];
+					double p = inPressure.get( basinId)[0]/1000;
 					if (isNovalue(p)) {
 						pressure = defaultPressure;
 					} else {

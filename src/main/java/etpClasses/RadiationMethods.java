@@ -1,58 +1,29 @@
+/*
+ * GNU GPL v3 License
+ *
+ * Copyright 2018 Michele Bottazzi
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package etpClasses;
 
-import static java.lang.Math.pow;
-import static java.lang.Math.exp;
+public interface RadiationMethods {
+	
+	abstract public double getSolarElevationAngle();
+	abstract public double computeLongWaveRadiationBalance ();
+	abstract public double computeAbsordebRadiationSunlit ();
+	abstract public double computeAbsordebRadiationShadow ();
+	abstract public double computeSunlitLeafAreaIndex ();
 
-public class RadiationMethods {
-	double diffuseExtinctionCoefficient = 0.719;
-	
-	double leafScatteringCoefficient = 0.15;
-	double canopyReflectionCoefficientDiffuse = 0.036;
-	
-	public double computeLongWaveRadiationBalance(double leafSide, double longWaveEmittance, double airTemperature, double leafTemperature, double stefanBoltzmannConstant) {
-		// Compute the net long wave radiation i.e. the incoming minus outgoing [J m-2 s-1]
-		double longWaveRadiation = 4 * leafSide * longWaveEmittance * stefanBoltzmannConstant * (((pow (airTemperature, 3))*leafTemperature - (pow (airTemperature, 4))));
-		return longWaveRadiation;	
-	}
-	
-	public double computeAbsordebRadiationSunlit (double leafAreaIndex, double solarElevationAngle, double shortWaveRadiationDirect,double shortWaveRadiationDiffuse) {
-    	double directExtinctionCoefficientInCanopy = 0.5/solarElevationAngle;
-		double scatteredExtinctionCoefficient = 0.46/solarElevationAngle;
-		
-		double canopyReflectionCoefficientBeam = 1-exp((-2*0.041*directExtinctionCoefficientInCanopy)/(1+directExtinctionCoefficientInCanopy));
-		
-	    double directAbsorbedRadiation = shortWaveRadiationDirect*(1-leafScatteringCoefficient)*(1-exp(-directExtinctionCoefficientInCanopy*leafAreaIndex));
-	    
-	    double diffuseAbsorbedRadiation = shortWaveRadiationDiffuse*(1-canopyReflectionCoefficientDiffuse)*
-	    		(1-exp(-(diffuseExtinctionCoefficient+directExtinctionCoefficientInCanopy)*leafAreaIndex))*
-	    		(diffuseExtinctionCoefficient/(diffuseExtinctionCoefficient+directExtinctionCoefficientInCanopy));
-	    
-	    double scatteredAbsorbedRadiation = shortWaveRadiationDirect*((1-canopyReflectionCoefficientBeam)*
-	    		(1-exp(-(directExtinctionCoefficientInCanopy+scatteredExtinctionCoefficient)*leafAreaIndex))*
-	    		(scatteredExtinctionCoefficient/(directExtinctionCoefficientInCanopy+scatteredExtinctionCoefficient))-
-	    		(1-leafScatteringCoefficient)*(1-exp(-2*directExtinctionCoefficientInCanopy*leafAreaIndex))/2);
-	    
-	    double absordebRadiationSunlit = directAbsorbedRadiation + diffuseAbsorbedRadiation + scatteredAbsorbedRadiation;
-	    return absordebRadiationSunlit;
-	    }
-	public double computeAbsordebRadiationShadow (double leafAreaIndex, double solarElevationAngle, double shortWaveRadiationDirect,double shortWaveRadiationDiffuse) {
-    	double directExtinctionCoefficientInCanopy = 0.5/solarElevationAngle;
-		double scatteredExtinctionCoefficient = 0.46/solarElevationAngle;
-		double canopyReflectionCoefficientBeam = 1-exp((-2*0.041*directExtinctionCoefficientInCanopy)/(1+directExtinctionCoefficientInCanopy));		
-		double diffuseAbsorbedRadiationShadow = shortWaveRadiationDiffuse*(	1-canopyReflectionCoefficientBeam)*
-				(1-exp(-diffuseExtinctionCoefficient*leafAreaIndex)-(1-exp(-(diffuseExtinctionCoefficient+directExtinctionCoefficientInCanopy)*leafAreaIndex))*
-				(diffuseExtinctionCoefficient/(diffuseExtinctionCoefficient+directExtinctionCoefficientInCanopy)));
-		double scatteredAbsorbedRadiationShadow = shortWaveRadiationDirect*((1-canopyReflectionCoefficientBeam)*(1-exp(-scatteredExtinctionCoefficient*leafAreaIndex)-		    		
-				(1-exp(-(scatteredExtinctionCoefficient+directExtinctionCoefficientInCanopy)*leafAreaIndex))*
-		    	(scatteredExtinctionCoefficient/(scatteredExtinctionCoefficient+directExtinctionCoefficientInCanopy))) - 		
-		    	(1-leafScatteringCoefficient)*(1-exp(-directExtinctionCoefficientInCanopy*leafAreaIndex)-
-		    	(1-exp(-2*directExtinctionCoefficientInCanopy*leafAreaIndex))/2));
-		double absordebRadiationShadow = scatteredAbsorbedRadiationShadow + diffuseAbsorbedRadiationShadow;
-	    return absordebRadiationShadow;
-	    }	
-	public double computeSunlitLeafAreaIndex (double leafAreaIndex, double solarElevationAngle) {
-    	double directExtinctionCoefficientInCanopy = 0.5/solarElevationAngle;
-    	double sunlitLeafAreaIndex = (1-exp(-directExtinctionCoefficientInCanopy*leafAreaIndex))/directExtinctionCoefficientInCanopy;
-    	return sunlitLeafAreaIndex;
-	}
 }

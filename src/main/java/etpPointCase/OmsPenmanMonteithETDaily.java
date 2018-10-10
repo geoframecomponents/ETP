@@ -131,8 +131,10 @@ public class OmsPenmanMonteithETDaily extends JGTModel {
             double relativeHumidity = inRelativeHumidity.get(basinId)[0];
             if (relativeHumidity  == nullValue) {relativeHumidity = defaultRelativeHumidity;}
             
-            double netRadiation = inNetradiation.get(basinId)[0]*0.8;
+            double netRadiation = inNetradiation.get(basinId)[0];
             if (netRadiation  == nullValue) {netRadiation = defaultNetradiation;}
+            if (netRadiation  < 0.0) {netRadiation = 0.0;}
+
             
             double soilFlux = inSoilFlux.get(basinId)[0];
             if (soilFlux  == nullValue) {soilFlux = defaultSoilFlux;}

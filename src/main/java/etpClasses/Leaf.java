@@ -25,11 +25,13 @@ public class Leaf {
 	
 	public double length = 0.05;
 	public int side = 2;
+	public int stomaSide = 1;
+
 	public double area = PI*pow(length/2,2);
 	//public double temperature;
 	
-	public double poreRadius = 18.5 * pow(10,-6);
-	public double poreDensity = 32.75 * pow(10,6);
+	public double poreRadius = 20 * pow(10,-6);
+	public double poreDensity = 7.45 * pow(10,6);
 	public double poreArea = pow(poreRadius,2)*PI;
 	public double poreDepth= 3 * pow(10,-5);
 	

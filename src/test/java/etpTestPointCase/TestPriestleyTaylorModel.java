@@ -27,9 +27,12 @@ public class TestPriestleyTaylorModel{
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
         String inPathToNetRad 		="resources/Input/dataET_point/NetRadiation.csv";
 		String inPathToTemperature 	="resources/Input/dataET_point/AirTemperature.csv";
+		String inPathToPressure		="resources/Input/dataET_point/AtmosphericPressure.csv";
 		String pathToETP			="resources/Output/etp_PrestleyTaylor.csv";
         OmsTimeSeriesIteratorReader tempReader = getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
-        OmsTimeSeriesIteratorReader netradReader = getTimeseriesReader(inPathToNetRad, fId, startDate, endDate, timeStepMinutes);      
+        OmsTimeSeriesIteratorReader netradReader = getTimeseriesReader(inPathToNetRad, fId, startDate, endDate, timeStepMinutes);
+        OmsTimeSeriesIteratorReader pressureReader = getTimeseriesReader(inPathToPressure, fId, startDate, endDate, timeStepMinutes);      
+
         OmsTimeSeriesIteratorWriter writerETP = new OmsTimeSeriesIteratorWriter();
 		writerETP.file = pathToETP;
 		writerETP.tStart = startDate;
@@ -37,14 +40,22 @@ public class TestPriestleyTaylorModel{
 		writerETP.fileNovalue="-9999";
         OmsPriestleyTaylorEtpModel PTEtp = new OmsPriestleyTaylorEtpModel();
         while( tempReader.doProcess ) {
-            tempReader.nextRecord();
+            
+        	tempReader.nextRecord();
             HashMap<Integer, double[]> id2ValueMap = tempReader.outData;
             PTEtp.inTemp = id2ValueMap;
             PTEtp.tStartDate=startDate;
             PTEtp.defaultPressure = 101.3;
+            
             netradReader.nextRecord();
             id2ValueMap = netradReader.outData;
             PTEtp.inNetradiation = id2ValueMap;
+            
+            pressureReader.nextRecord();
+            id2ValueMap = pressureReader.outData;
+            PTEtp.inPressure = id2ValueMap;
+            
+            
             PTEtp.pAlpha = 1.06;
             PTEtp.pGmorn = 0.35;
             PTEtp.pGnight = 0.75;

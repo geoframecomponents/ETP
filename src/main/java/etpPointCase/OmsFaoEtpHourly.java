@@ -103,22 +103,38 @@ public class OmsFaoEtpHourly extends JGTModel {
     @Unit("mm hour-1")
     @Out
     public HashMap<Integer, double[]> outFaoEtp;
+    double nullValue = -9999;
 
     @Execute
     public void process() throws Exception {
         outFaoEtp = new HashMap<Integer, double[]>();
-        Set<Entry<Integer, double[]>> entrySet = inNetradiation.entrySet();
+        Set<Entry<Integer, double[]>> entrySet = inTemp.entrySet();
         for( Entry<Integer, double[]> entry : entrySet ) {
             Integer basinId = entry.getKey();
 
-            double temperature = defaultTemp ;
-            if ( inTemp!= null) {
-                temperature = entry.getValue()[0];
-            }
+           
+            //double temperature = defaultTemp ;
+            //if ( inTemp!= null) {
+            //    temperature = entry.getValue()[0];
+            //}
+            double temperature = inTemp.get(basinId)[0];
+			if (temperature == (nullValue)) {temperature = defaultTemp;}		
+			  	
+			double netradiation = inNetradiation.get(basinId)[0];
+			if (netradiation == (nullValue)) {netradiation = defaultNetradiation;}		
+			
+			double wind = inWind.get(basinId)[0];
+			if (wind == (nullValue)) {wind = defaultWind;}		
+			
+			double pressure = inPressure.get(basinId)[0];
+			if (pressure == (nullValue)) {pressure = defaultPressure;}		
 
-            double netradiation = defaultNetradiation;
+			double rh = inRh.get(basinId)[0];
+			if (rh == (nullValue)) {rh = defaultRh;}		
+			
+         /*   double netradiation = defaultNetradiation;
             if (inNetradiation != null) {
-                netradiation = inNetradiation.get(basinId)[0] * 3.6 / 1000.0;
+                netradiation = inNetradiation.get(basinId)[0];
             }
 
             double wind = defaultWind;
@@ -128,14 +144,14 @@ public class OmsFaoEtpHourly extends JGTModel {
 
             double pressure = defaultPressure;
             if (inPressure != null) {
-                pressure = inPressure.get(basinId)[0] / 10.0;
+                pressure = inPressure.get(basinId)[0];
             }
 
             double rh = defaultRh;
             if (inPressure != null) rh=inRh.get(basinId)[0];
             if (isNovalue(rh)) {
                 rh = defaultRh;
-            }
+            }*/
 
             double etp = compute(netradiation, wind, temperature, rh, pressure);
             outFaoEtp.put(basinId, new double[]{etp});
@@ -158,6 +174,8 @@ public class OmsFaoEtpHourly extends JGTModel {
         // Computation of Psicrometric constant gamma[kPa °C-1]
 
         double gamma = 0.665 * 0.001 * pressure;
+     
+
         //pm.message("gamma = " + gamma); //$NON-NLS-1$
         // End Computation of Psicrometric constant gamma
 
@@ -171,7 +189,6 @@ public class OmsFaoEtpHourly extends JGTModel {
         // Computation of average hourly actual vapour pressure ea [kPa]
 
         double ea = e0_AirTem * rh / 100;
-
         //pm.message("ea = " + ea); //$NON-NLS-1$
 
         // End of computation average hourly actual vapour pressure ea
@@ -180,19 +197,25 @@ public class OmsFaoEtpHourly extends JGTModel {
         boolean islight = true;
         double coeff_G;
         if (islight == true) {
+            coeff_G = 0.0;
+        } else {
+            coeff_G = 0.0;
+        }
+        
+      /*  if (islight == true) {
             coeff_G = 0.1;
         } else {
             coeff_G = 0.5;
-        }
+        }*/
         double G = coeff_G * netradiation;
         //pm.message("G = " + G); //$NON-NLS-1$
 
         // End of computation of Soil heat flux
 
         double num1 = 0.408 * delta * (netradiation - G);
-        double num2 = (37 * gamma * wind * (e0_AirTem - ea)) / (temperature + 273);
+        double num2 = (900 * gamma * wind * (e0_AirTem - ea)) / (temperature + 273);
         double den = delta + gamma * (1 + 0.34 * wind);
-        double result = (num1 + num2) / den;
+        double result = ((num1 + num2) / den);//*(2450000/(3600*24));
         return result;
     }
 }
