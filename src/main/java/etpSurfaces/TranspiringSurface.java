@@ -37,6 +37,9 @@ public interface TranspiringSurface {
 	void setAirTemperature(double airTemperature);
 	void setSurfaceTemperature(double surfaceTemperature);
 	
+	void setStressSun(double stressSun);
+	void setStressSh(double stressSh);
+	
 	void setLatentHeatTransferCoefficient(double latentHeatTransferCoefficient);
 	void setSensibleHeatTransferCoefficient(double sensibleHeatTransferCoefficient);
 	
@@ -53,7 +56,8 @@ public interface TranspiringSurface {
 	
 	void setDate(DateTime date);
 	void setDoHourly(boolean doHourly);
-
+	void setTimeStep(double time);
+	
 	void setLatitude(double latitude);
 	void setLongitude(double longitude);
 

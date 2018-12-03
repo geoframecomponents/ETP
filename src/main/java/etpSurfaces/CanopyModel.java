@@ -31,6 +31,7 @@ public class CanopyModel {
 	
 	
 	public static TranspiringSurface createTheCanopy(String type, double delta, double leafTemperature, double airTemperature, 
+			double stressSun, double stressSh,
 			double latentHeatTransferCoefficient, double sensibleHeatTransferCoefficient, double vaporPressure, 
 			double saturationVaporPressure,	double shortWaveRadiation, double longWaveRadiation, double side, DateTime date, 
 			double latitude,double longitude,boolean doHourly, double leafAreaIndex){

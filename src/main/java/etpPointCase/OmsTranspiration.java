@@ -5,6 +5,7 @@ import static java.lang.Math.pow;
 //import static org.jgrasstools.gears.libs.modules.JGTConstants.isNovalue;
 import static java.lang.Math.abs;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,6 +46,8 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
+
+import etpPointCase.*;
 import etpClasses.*;
 import etpSurfaces.*;
 
@@ -240,6 +243,10 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 	@In
 	public String tStartDate;
 	
+	@Description("The first day of the simulation.")
+	@In
+	public int tStep;
+	
 	public DateTime date;
 	double nullValue = -9999.0;
 	public int time;
@@ -259,6 +266,12 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 	// OUTPUT
 	/////////////////////////////////////////////
 	
+	
+	@Description("The latent heat.")
+	@Unit("mm h-1")
+	@Out
+	public double totalTranspiration; 
+	
 	@Description("The latent heat.")
 	@Unit("mm h-1")
 	@Out
@@ -277,7 +290,12 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 	@Description("The sensible heat.")
 	@Unit("W m-2")
 	@Out
-	public HashMap<Integer, double[]> outSensibleHeat;
+	public HashMap<Integer, double[]> outSensibleHeatSun;
+	
+	@Description("The sensible heat.")
+	@Unit("W m-2")
+	@Out
+	public HashMap<Integer, double[]> outSensibleHeatShadow;
 	
 	@Description("The leaf Temperature.")
 	@Unit("K")
@@ -308,7 +326,11 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 	/////////////////////////////////////////////
 	// OTHERS - DO
 	/////////////////////////////////////////////
-	
+	@In
+	public HashMap<Integer, double[]> inStressSun;
+
+	@In
+	public HashMap<Integer, double[]> inStressSh;
 	
 	@Description("Switch that defines if it is hourly.")
 	@In
@@ -322,28 +344,32 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 	//@In
 	//public boolean doMultiLayer = true;
 
-
+	@In
+	String printo;
 	// METHODS FROM CLASSES		
 	SensibleHeatMethods sensibleHeat 	= new SensibleHeatMethods();
 	LatentHeatMethods latentHeat 		= new LatentHeatMethods();
 	PressureMethods pressure 			= new PressureMethods(); 
 	RadiationMethod radiationMethods 	= new RadiationMethod();
 	SolarGeometry solarGeometry 		= new SolarGeometry();
+
 	TranspiringSurface transpiringSurface;
 	
 	@Execute
 	public void process() throws Exception {
 		if (doHourly == true) {
-			time =3600;
+			time =tStep*60;
+
 			} else {
 			time = 86400;
 			}
 		DateTime startDateTime = formatter.parseDateTime(tStartDate);
-		DateTime date=(doHourly==false)?startDateTime.plusDays(step).plusHours(12):startDateTime.plusHours(step);	
+		DateTime date=(doHourly==false)?startDateTime.plusDays(step).plusHours(12):startDateTime.plusMinutes(tStep*step);
+
 		stationCoordinates = getCoordinate(0,inCentroids, idCentroids);
 		Iterator<Integer> idIterator = stationCoordinates.keySet().iterator();
 		CoordinateReferenceSystem sourceCRS = inDem.getCoordinateReferenceSystem2D();
-		
+
 		Leaf propertyOfLeaf = new Leaf();
 		double poreRadius = propertyOfLeaf.poreRadius;
 		double poreArea = propertyOfLeaf.poreArea;
@@ -361,7 +387,8 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 			outLeafTemperatureSun 	= new HashMap<Integer, double[]>();
 			outRadiationSun 	= new HashMap<Integer, double[]>();
 			outRadiationShadow 	= new HashMap<Integer, double[]>();
-			outSensibleHeat 	= new HashMap<Integer, double[]>();
+			outSensibleHeatSun 	= new HashMap<Integer, double[]>();
+			outSensibleHeatShadow 	= new HashMap<Integer, double[]>();
 			outRadiationShadow 	= new HashMap<Integer, double[]>();
 			outLeafTemperatureShadow= new HashMap<Integer, double[]>();
 			outCanopy 			= new HashMap<Integer, double[]>();
@@ -395,6 +422,9 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 			// if LAI is not 0 compute transpiration
 			if (leafAreaIndex != 0) {	
 							
+				double stressSun = inStressSun.get(basinId)[0];
+				double stressSh = inStressSh.get(basinId)[0];
+				//if (stressSun == nullValue) {shortWaveRadiationDirect = defaultShortWaveRadiationDirect;}
 				
 				double shortWaveRadiationDirect = inShortWaveRadiationDirect.get(basinId)[0];
 				if (shortWaveRadiationDirect == nullValue) {shortWaveRadiationDirect = defaultShortWaveRadiationDirect;}
@@ -408,7 +438,7 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				double windVelocity = defaultWindVelocity;
 				if (inWindVelocity != null){windVelocity = inWindVelocity.get(basinId)[0];}
 				if (windVelocity == nullValue) {windVelocity = defaultWindVelocity;}
-				//if (windVelocity < 0.5) {windVelocity = defaultWindVelocity;}			
+				if (windVelocity == 0.0) {windVelocity = defaultWindVelocity;}			
 				
 				double atmosphericPressure = 101325;
 				if (inAtmosphericPressure != null){atmosphericPressure = inAtmosphericPressure.get(basinId)[0];}
@@ -433,8 +463,8 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 						airDensity, molarGasConstant, molarVolume, waterMolarMass, latentHeatEvaporation, poreDensity, poreArea, poreDepth, poreRadius);			
 
 				
-				transpiringSurface=CanopyModel.createTheCanopy(typeOfTerrainCover, delta, leafTemperature, airTemperature, latentHeatTransferCoefficient,
-						sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure,
+				transpiringSurface=CanopyModel.createTheCanopy(typeOfTerrainCover, delta, leafTemperature, airTemperature, stressSun, stressSh,
+						latentHeatTransferCoefficient,sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure,
 						shortWaveRadiationDirect, longWaveRadiation, leafSide,date, latitude,longitude, doHourly, leafAreaIndex);
 				
 				//if ("MultiLayersCanopy".equals(typeOfTerrainCover)) {		
@@ -467,7 +497,9 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				transpiringSurface.setAirTemperature(airTemperature);
 				transpiringSurface.setSurfaceTemperature(leafTemperature);
 				
-				
+				transpiringSurface.setStressSun(stressSun);
+				transpiringSurface.setStressSh(stressSh);
+
 				transpiringSurface.setLatentHeatTransferCoefficient(latentHeatTransferCoefficient);
 				transpiringSurface.setSensibleHeatTransferCoefficient(sensibleHeatTransferCoefficient);
 				
@@ -483,7 +515,7 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				
 				transpiringSurface.setDate(date);
 				transpiringSurface.setDoHourly(doHourly);
-
+				transpiringSurface.setTimeStep(time);
 				transpiringSurface.setLatitude(latitude);
 				transpiringSurface.setLongitude(longitude);
 
@@ -600,12 +632,12 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 			double latentHeatSun = latentHeatFluxLight;//latentHeatFluxLight;//+latentHeatFluxShadow;	
 
 			double latentHeatShadow = latentHeatFluxShadow;//latentHeatFluxLight;//+latentHeatFluxShadow;	
-			double totalTranspiration = (latentHeatFluxLight+latentHeatFluxShadow)*(time/latentHeatEvaporation);
-			double totalSensibleHeat = sensibleHeatFluxLight+sensibleHeatFluxShadow;
-			double outputRadiationCanopyInSun = radiationCanopyInLight;
-			double outputRadiationCanopyInShadow = radiationCanopyInShadow;
+			totalTranspiration = (latentHeatFluxLight+latentHeatFluxShadow)*(time/latentHeatEvaporation);
+			//double totalSensibleHeat = sensibleHeatFluxLight+sensibleHeatFluxShadow;
+			//double outputRadiationCanopyInSun = radiationCanopyInLight;
+			//double outputRadiationCanopyInShadow = radiationCanopyInShadow;
 			if (doFullPrint == true) {				
-				storeResultFull((Integer)basinId, latentHeatSun, latentHeatShadow, totalTranspiration, totalSensibleHeat,
+				storeResultFull((Integer)basinId, latentHeatSun, latentHeatShadow, totalTranspiration, sensibleHeatFluxLight,sensibleHeatFluxShadow,
 						leafTemperatureSun, leafTemperatureShadow,radiationCanopyInLight, radiationCanopyInShadow,leafInSunlight);
 				}
 			else {
@@ -613,7 +645,7 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				}
 			}
 			else {
-				if (doFullPrint == true) {storeResultFull((Integer)basinId,0,0,0,0,0,0,0,0,0);}
+				if (doFullPrint == true) {storeResultFull((Integer)basinId,0,0,0,0,0,0,0,0,0,0);}
 				else {storeResult((Integer)basinId,0,0,0);}
 				}
 			}
@@ -727,17 +759,21 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 		return result;
 	}*/
 	
-	private void storeResultFull(int ID,double latentHeatSun, double latentHeatShadow,double totalTranspiration, double totalSensibleHeat,
-			double leafTemperatureSun, double leafTemperatureShadow, double radiationCanopyInLight, double radiationCanopyInShadow, double leafInSunlight) 
+	private void storeResultFull(int ID,double latentHeatSun, double latentHeatShadow,double totalTranspiration, 
+			double sensibleHeatFluxLight, double sensibleHeatFluxShadow,
+			double leafTemperatureSun, double leafTemperatureShadow, 
+			double radiationCanopyInLight, double radiationCanopyInShadow, 
+			double leafInSunlight) 
 			throws SchemaException {
 		
 	//	outLatentHeatShadow = new HashMap<Integer, double[]>();
 	//	outLatentHeatSun = new HashMap<Integer, double[]>();
 		outLatentHeatSun.put(		ID, new double[]{latentHeatSun});
 		outLatentHeatShadow.put(		ID, new double[]{latentHeatShadow});
-
 		outTranspiration.put(	ID, new double[]{totalTranspiration});
-		outSensibleHeat.put(	ID, new double[]{totalSensibleHeat});
+		
+		outSensibleHeatSun.put(	ID, new double[]{sensibleHeatFluxLight});
+		outSensibleHeatShadow.put(	ID, new double[]{sensibleHeatFluxShadow});
 
 		outLeafTemperatureSun.put(	ID, new double[]{leafTemperatureSun});
 		outLeafTemperatureShadow.put(	ID, new double[]{leafTemperatureShadow});

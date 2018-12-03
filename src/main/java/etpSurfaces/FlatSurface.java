@@ -52,6 +52,7 @@ public class FlatSurface implements TranspiringSurface{
 
 	DateTime date;
 	boolean doHourly;
+	double time;
 
 	double latitude;
 	double longitude;
@@ -77,7 +78,8 @@ public class FlatSurface implements TranspiringSurface{
 	
 	public void setDate(DateTime date){ this.date = date;}
 	public void setDoHourly(boolean doHourly){ this.doHourly = doHourly;}
-
+	public void setTimeStep(double time) {this.time = time;}
+	
 	public void setLatitude(double latitude){ this.latitude = latitude;}
 	public void setLongitude(double longitude){ this.longitude = longitude;}
 	/*	public void setDelta(double leafTemperature) { this.leafTemperature = leafTemperature; 

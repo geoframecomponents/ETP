@@ -53,10 +53,14 @@ public class MultiLayersCanopy implements TranspiringSurface{
 
 	DateTime date;
 	boolean doHourly;
+	double time;
 
 	double latitude;
 	double longitude;
 	double solarElevationAngle;
+	
+	double stressSun;
+	double stressSh;
 
 //	double solarElevationAngle;
 	//double shortWaveRadiationDiffuse;
@@ -64,6 +68,11 @@ public class MultiLayersCanopy implements TranspiringSurface{
 	public void setDelta(double delta){ this.delta = delta;}
 	public void setAirTemperature(double airTemperature){ this.airTemperature = airTemperature; }
 	public void setSurfaceTemperature(double leafTemperature){ this.surfaceIrradiatedTemperature = leafTemperature;} 
+	
+	public void setStressSun(double stressSun){ this.stressSun = stressSun;} 
+	public void setStressSh(double stressSh){ this.stressSh = stressSh;} 
+
+
 	
 	public void setLatentHeatTransferCoefficient(double latentHeatTransferCoefficient){ this.latentHeatTransferCoefficient = latentHeatTransferCoefficient;} 
 	public void setSensibleHeatTransferCoefficient(double sensibleHeatTransferCoefficient){ this.sensibleHeatTransferCoefficient = sensibleHeatTransferCoefficient;}
@@ -81,6 +90,7 @@ public class MultiLayersCanopy implements TranspiringSurface{
 	
 	public void setDate(DateTime date){ this.date = date;}
 	public void setDoHourly(boolean doHourly){ this.doHourly = doHourly;}
+	public void setTimeStep(double time) {this.time = time;} 
 
 	public void setLatitude(double latitude){ this.latitude = latitude;}
 	public void setLongitude(double longitude){ this.longitude = longitude;}
@@ -121,7 +131,7 @@ public class MultiLayersCanopy implements TranspiringSurface{
 
 	@Override
 	public double irradiatedSurface() {
-		double solarElevationAngle = solarGeometry.getSolarElevationAngle(date, latitude,longitude, doHourly);
+		double solarElevationAngle = solarGeometry.getSolarElevationAngle(date, latitude,longitude, doHourly, time);
 		//solarElevationAngle = ((solarElevationAngle>0)?solarElevationAngle:0);
 		this.solarElevationAngle = solarElevationAngle;
 		double areaInSunlight	=((solarElevationAngle>0)?radiationProperties.computeSunlitLeafAreaIndex(leafAreaIndex, solarElevationAngle):0);
@@ -139,14 +149,13 @@ public class MultiLayersCanopy implements TranspiringSurface{
 	@Override
 	public double computeLatentHeatIrradiatedSurface() {
 		// Computation of the latent heat flux from leaf [J m-2 s-1]
-		double latentHeatLight = surfaceInSunlight*latentHeat.computeLatentHeatFlux(delta, surfaceIrradiatedTemperature, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
+		double latentHeatLight =  stressSun*surfaceInSunlight*latentHeat.computeLatentHeatFlux(delta, surfaceIrradiatedTemperature, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
 		//double latentHeatLight = surfaceInSunlight*(sensibleHeatTransferCoefficient* (delta * (surfaceIrradiatedTemperature - airTemperature) + saturationVaporPressure - vaporPressure))/(sensibleHeatTransferCoefficient/latentHeatTransferCoefficient);
 		return latentHeatLight;	
 	}
 	@Override
 	public double computeLatentHeatFluxShadedSurface() {
-		double latentHeatShadow = surfaceInShadow*latentHeat.computeLatentHeatFlux(delta, surfaceShadedTemperature, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-		
+		double latentHeatShadow = stressSh*surfaceInShadow*latentHeat.computeLatentHeatFlux(delta, surfaceShadedTemperature, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
 		return latentHeatShadow;
 	}
 			
@@ -154,26 +163,37 @@ public class MultiLayersCanopy implements TranspiringSurface{
 	
 	@Override
 	public double computeSurfaceTemperatureIrradiatedSurface() {
-		double reducedShortWave = shortWaveCanopyLight/surfaceInSunlight;
-		double reducedShortWave2 = (Double.isNaN(reducedShortWave)?0:reducedShortWave);
-		double surfaceTemperatureIrradiated1 = (reducedShortWave2 + sensibleHeatTransferCoefficient*airTemperature +
-				latentHeatTransferCoefficient*(delta*airTemperature + vaporPressure - saturationVaporPressure) + 
-				side * longWaveRadiation * 4 );
-		double surfaceTemperatureIrradiated2 =(1/(sensibleHeatTransferCoefficient + latentHeatTransferCoefficient * delta +	
-				side * longWaveRadiation/airTemperature * 4));
+		//double reducedShortWave = shortWaveCanopyLight/surfaceInSunlight;
+		//double reducedShortWave2 = (Double.isNaN(reducedShortWave)?0:reducedShortWave);
+		double surfaceTemperatureIrradiated1 = (shortWaveCanopyLight + 
+				sensibleHeatTransferCoefficient*airTemperature*surfaceInSunlight +
+				stressSun * 
+				latentHeatTransferCoefficient*(delta*airTemperature + vaporPressure - saturationVaporPressure)*surfaceInSunlight  + 
+				side * longWaveRadiation * 4 *surfaceInSunlight);
+		double surfaceTemperatureIrradiated2 =(1/(
+				sensibleHeatTransferCoefficient*surfaceInSunlight + 
+				stressSun*latentHeatTransferCoefficient * delta *surfaceInSunlight +	
+				side * longWaveRadiation/airTemperature * 4*surfaceInSunlight));
 		double surfaceTemperatureIrradiated = surfaceTemperatureIrradiated1*surfaceTemperatureIrradiated2;
 		this.surfaceIrradiatedTemperature = surfaceTemperatureIrradiated;
 		return surfaceIrradiatedTemperature;	
 	}
 	@Override
 	public double computeSurfaceTemperatureShadedSurface() {
-		double reducedShortWave = shortWaveCanopyShadow/surfaceInShadow;
-		double reducedShortWave2 = (Double.isNaN(reducedShortWave)?0:reducedShortWave);
-		double surfaceTemperatureShaded1 = (reducedShortWave2 + sensibleHeatTransferCoefficient*airTemperature +
-				latentHeatTransferCoefficient*(delta*airTemperature + vaporPressure - saturationVaporPressure) + 
-				side * longWaveRadiation * 4 );
-		double surfaceTemperatureShaded2 =(1/(sensibleHeatTransferCoefficient + latentHeatTransferCoefficient * delta +	
-				side * longWaveRadiation/airTemperature * 4));
+		//double reducedShortWave = shortWaveCanopyShadow/surfaceInShadow;
+		latentHeatTransferCoefficient = ((shortWaveCanopyShadow==0)?0:latentHeatTransferCoefficient);
+		//double reducedShortWave2 = (Double.isNaN(reducedShortWave)?0:reducedShortWave);
+
+		double surfaceTemperatureShaded1 = (shortWaveCanopyShadow + 
+				sensibleHeatTransferCoefficient*airTemperature	*surfaceInShadow +
+				stressSh*latentHeatTransferCoefficient*(delta*airTemperature + vaporPressure - saturationVaporPressure)*surfaceInShadow 
+				+side * longWaveRadiation * 4 *surfaceInShadow);
+		//System.out.print("SW in Sh in canopy"		+shortWaveCanopyShadow);
+	//	System.out.print("LW in sh in canopy"		+side * longWaveRadiation * 4 *surfaceInShadow);
+		double surfaceTemperatureShaded2 =(1/(
+				sensibleHeatTransferCoefficient *surfaceInShadow + 
+				stressSh*latentHeatTransferCoefficient * delta *surfaceInShadow +	
+				side * longWaveRadiation/airTemperature * 4*surfaceInShadow));
 		double surfaceTemperatureShaded = surfaceTemperatureShaded1*surfaceTemperatureShaded2;
 		this.surfaceShadedTemperature = surfaceTemperatureShaded;
 		return surfaceShadedTemperature;	
@@ -188,6 +208,8 @@ public class MultiLayersCanopy implements TranspiringSurface{
 	@Override
 	public double computeSensibleHeatFluxShadedSurface() {
 		double sensibleHeatShadow = surfaceInShadow*sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, surfaceShadedTemperature, airTemperature);				//sensibleHeatTransferCoefficient * (leafTemperature - airTemperature);
+		//System.out.print("HL in sh in canopy"		+sensibleHeatShadow);
+
 		return sensibleHeatShadow;			
 	}
 	

@@ -16,14 +16,6 @@ public class RadiationMethod {
 	}
 	
 	public double computeAbsordebRadiationSunlit (double leafAreaIndex, double solarElevationAngle, double shortWaveRadiationDirect,double shortWaveRadiationDiffuse) {
-    	//System.out.println("LAI	" +leafAreaIndex);
-
-    	//System.out.println("solarElevationAngle		"+solarElevationAngle);
-
-    	//System.out.println("shortWaveRadiationDirect	"+shortWaveRadiationDirect);
-
-    	//System.out.println("shortWaveRadiationDiffuse	"+shortWaveRadiationDiffuse);
-
     	
     	double directExtinctionCoefficientInCanopy = 0.5/solarElevationAngle;
     	//System.out.println("directExtinctionCoefficientInCanopy		"+directExtinctionCoefficientInCanopy);

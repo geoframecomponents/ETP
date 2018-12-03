@@ -67,7 +67,7 @@ public class OmsFaoEtpHourly extends JGTModel {
     @Description("The wind default value in case of missing data.")
     @In
     @Unit("m s-1")
-    public double defaultWind = 2.0;
+    public double defaultWind = 0.5;
 
     @Description("The mean hourly air temperature.")
     @In
@@ -89,7 +89,7 @@ public class OmsFaoEtpHourly extends JGTModel {
     @Unit("%")
     public double defaultRh = 70.0;
 
-    @Description("The atmospheric pressure in hPa.")
+    @Description("The atmospheric pressure in kPa.")
     @In
     @Unit("KPa")
     public HashMap<Integer, double[]> inPressure;
@@ -97,7 +97,7 @@ public class OmsFaoEtpHourly extends JGTModel {
     @Description("The pressure default value in case of missing data.")
     @In
     @Unit("KPa")
-    public double defaultPressure = 100.0;
+    public double defaultPressure = 101.325;
 
     @Description("The reference evapotranspiration.")
     @Unit("mm hour-1")
@@ -126,7 +126,7 @@ public class OmsFaoEtpHourly extends JGTModel {
 			double wind = inWind.get(basinId)[0];
 			if (wind == (nullValue)) {wind = defaultWind;}		
 			
-			double pressure = inPressure.get(basinId)[0];
+			double pressure = inPressure.get(basinId)[0]/1000;
 			if (pressure == (nullValue)) {pressure = defaultPressure;}		
 
 			double rh = inRh.get(basinId)[0];
