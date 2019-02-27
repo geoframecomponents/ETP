@@ -50,6 +50,8 @@ public interface TranspiringSurface {
 	void setDiffuseShortWave(double shortWaveRadiationDiffuse);
 
 	void setLongWaveRadiation(double longWaveRadiation);
+	void setSoilHeatFlux(double soilHeatFlux);
+
 	
 	void setSide(double side);
 	void setLeafAreaIndex(double leafAreaIndex);

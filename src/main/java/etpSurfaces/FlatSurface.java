@@ -41,6 +41,7 @@ public class FlatSurface implements TranspiringSurface{
 	double shortWaveRadiationDirect; 
 	double shortWaveRadiationDiffuse;
 	double longWaveRadiation;
+	double soilHeatFlux;
 	double shortWaveCanopyLight; 
 	double shortWaveCanopyShadow; 
 
@@ -58,12 +59,18 @@ public class FlatSurface implements TranspiringSurface{
 	double longitude;
 	double solarElevationAngle;
 	
+	double stressSun;
+	double stressSh;
+	
 	public void setDelta(double delta){ this.delta = delta;}
 	public void setAirTemperature(double airTemperature){ this.airTemperature = airTemperature; }
 	public void setSurfaceTemperature(double leafTemperature){ this.surfaceIrradiatedTemperature = leafTemperature;} 
 	
 	public void setLatentHeatTransferCoefficient(double latentHeatTransferCoefficient){ this.latentHeatTransferCoefficient = latentHeatTransferCoefficient;} 
 	public void setSensibleHeatTransferCoefficient(double sensibleHeatTransferCoefficient){ this.sensibleHeatTransferCoefficient = sensibleHeatTransferCoefficient;}
+	
+	public void setStressSun(double stressSun){ this.stressSun = stressSun;} 
+	public void setStressSh(double stressSh){ this.stressSh = 0;} 
 	
 	public void setVaporPressure(double vaporPressure){ this.vaporPressure = vaporPressure; }
 	public void setSaturationVaporPressure(double saturationVaporPressure){ this.saturationVaporPressure = saturationVaporPressure;}
@@ -72,7 +79,8 @@ public class FlatSurface implements TranspiringSurface{
 	public void setDiffuseShortWave(double shortWaveRadiationDiffuse){ this.shortWaveRadiationDiffuse = shortWaveRadiationDiffuse; }
 
 	public void setLongWaveRadiation(double longWaveRadiation){ this.longWaveRadiation = longWaveRadiation; }
-	
+	public void setSoilHeatFlux(double soilHeatFlux){ this.soilHeatFlux = soilHeatFlux; }
+
 	public void setSide(double side){ this.side = side;}
 	public void setLeafAreaIndex(double leafAreaIndex){ this.leafAreaIndex = leafAreaIndex;}
 	
@@ -147,7 +155,8 @@ public class FlatSurface implements TranspiringSurface{
 		
 		@Override
 		public double computeSurfaceTemperatureIrradiatedSurface() {
-			double surfaceTemperatureIrradiated1 = (shortWaveCanopyLight/surfaceInSunlight + sensibleHeatTransferCoefficient*airTemperature +
+			double surfaceTemperatureIrradiated1 = (shortWaveCanopyLight/surfaceInSunlight - soilHeatFlux + 
+					sensibleHeatTransferCoefficient*airTemperature +
 					latentHeatTransferCoefficient*(delta*airTemperature + vaporPressure - saturationVaporPressure) + 
 					side * longWaveRadiation * 4 );
 			double surfaceTemperatureIrradiated2 =(1/(sensibleHeatTransferCoefficient + latentHeatTransferCoefficient * delta +	

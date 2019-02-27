@@ -187,11 +187,11 @@ public class OmsTranspirationRaster extends JGTModel implements Parameters {
 	double elevation;	
 
 	// METHODS FROM CLASSES
-	SensibleHeatMethods sensibleHeat = new SensibleHeatMethods();
-	LatentHeatMethods latentHeat = new LatentHeatMethods();
-	PressureMethods pressure = new PressureMethods(); 
-	Radiations radiationMethods = new Radiations();
-	SolarGeometry solarGeometry = new SolarGeometry();
+	SensibleHeatMethods sensibleHeat 	= new SensibleHeatMethods();
+	LatentHeatMethods latentHeat 		= new LatentHeatMethods();
+	PressureMethods pressure 			= new PressureMethods(); 
+	RadiationMethod radiationMethods 	= new RadiationMethod();
+	SolarGeometry solarGeometry 		= new SolarGeometry();
 	
 	@Execute
 	

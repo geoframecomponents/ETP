@@ -42,6 +42,7 @@ public class MultiLayersCanopy implements TranspiringSurface{
 	double shortWaveRadiationDirect; 
 	double shortWaveRadiationDiffuse;
 	double longWaveRadiation;
+	double soilHeatFlux;
 	double shortWaveCanopyLight; 
 	double shortWaveCanopyShadow; 
 
@@ -84,7 +85,8 @@ public class MultiLayersCanopy implements TranspiringSurface{
 	public void setDiffuseShortWave(double shortWaveRadiationDiffuse){ this.shortWaveRadiationDiffuse = shortWaveRadiationDiffuse; }
 
 	public void setLongWaveRadiation(double longWaveRadiation){ this.longWaveRadiation = longWaveRadiation; }
-	
+	public void setSoilHeatFlux(double soilHeatFlux){ this.soilHeatFlux = soilHeatFlux; }
+
 	public void setSide(double side){ this.side = side;}
 	public void setLeafAreaIndex(double leafAreaIndex){ this.leafAreaIndex = leafAreaIndex;}
 	
@@ -165,7 +167,7 @@ public class MultiLayersCanopy implements TranspiringSurface{
 	public double computeSurfaceTemperatureIrradiatedSurface() {
 		//double reducedShortWave = shortWaveCanopyLight/surfaceInSunlight;
 		//double reducedShortWave2 = (Double.isNaN(reducedShortWave)?0:reducedShortWave);
-		double surfaceTemperatureIrradiated1 = (shortWaveCanopyLight + 
+		double surfaceTemperatureIrradiated1 = (shortWaveCanopyLight  - soilHeatFlux + 
 				sensibleHeatTransferCoefficient*airTemperature*surfaceInSunlight +
 				stressSun * 
 				latentHeatTransferCoefficient*(delta*airTemperature + vaporPressure - saturationVaporPressure)*surfaceInSunlight  + 

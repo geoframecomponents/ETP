@@ -25,17 +25,15 @@ import org.junit.*;
 public class TestTranspiration{
 	@Test
     public void Test() throws Exception {
-		//String startDate= "2016-06-15 15:00";
-        //String endDate	= "2016-07-16 00:00";
-        String startDate= "2017-07-01 10:15";
-        String endDate	= "2017-07-31 23:45";
-        int timeStepMinutes = 15;
-        String fId = "ID";
+		String startDate= "2015-07-21 00:00";
+        String endDate	= "2015-07-21 23:00";
+        int timeStepMinutes = 60;
+        String fId = "val";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
         
         OmsRasterReader DEMreader = new OmsRasterReader();
-		DEMreader.file = "resources/Input/dataET_raster/mybasin.asc";
+		DEMreader.file = "resources/Input/dataET_raster/dem.tif";
 		DEMreader.fileNovalue = -9999.0;
 		DEMreader.geodataNovalue = Double.NaN;
 		DEMreader.process();
@@ -47,12 +45,11 @@ public class TestTranspiration{
         String inPathToShortWaveRadiationDirect="resources/Input/dataET_point/ShortWaveRadiationDirect.csv";
         String inPathToShortWaveRadiationDiffuse="resources/Input/dataET_point/ShortWaveRadiationDiffuse.csv";
         String inPathToLWRad 			="resources/Input/dataET_point/LongWaveRadiation.csv";
+        String inPathToSoilHeatFlux 	="resources/Input/dataET_point/SoilHeatFlux.csv";
+
         String inPathToPressure 		="resources/Input/dataET_point/AtmosphericPressure.csv";
         String inPathToLai 				="resources/Input/dataET_point/LeafAreaIndex.csv";
         String inPathToCentroids 		="resources/Input/dataET_point/CentroidDem.shp";
-        
-        String inStressSun 				="resources/Input/dataET_point/ParSun.csv";
-        String inStressSh 		="resources/Input/dataET_point/ParShadow.csv";
        
         String outPathToLatentHeatSun			="resources/Output/LatentHeatSun.csv";
         String outPathToLatentHeatShadow		="resources/Output/LatentHeatShadow.csv";
@@ -75,11 +72,8 @@ public class TestTranspiration{
         OmsTimeSeriesIteratorReader longwaveReader 		= getTimeseriesReader(inPathToLWRad, fId, startDate, endDate,timeStepMinutes);
         OmsTimeSeriesIteratorReader pressureReader 		= getTimeseriesReader(inPathToPressure, fId, startDate, endDate,timeStepMinutes);
         OmsTimeSeriesIteratorReader leafAreaIndexReader	= getTimeseriesReader(inPathToLai, fId, startDate, endDate,timeStepMinutes);
-        
-        OmsTimeSeriesIteratorReader stressSunReader	= getTimeseriesReader(inStressSun, fId, startDate, endDate, timeStepMinutes);
-        OmsTimeSeriesIteratorReader stressShReader	= getTimeseriesReader(inStressSh, fId, startDate, endDate, timeStepMinutes);
+        OmsTimeSeriesIteratorReader soilHeatFluxReader 	= getTimeseriesReader(inPathToSoilHeatFlux, fId, startDate, endDate,timeStepMinutes);
 
-                
 		OmsShapefileFeatureReader centroidsReader 		= new OmsShapefileFeatureReader();
         centroidsReader.file = inPathToCentroids;
 		centroidsReader.readFeatureCollection();
@@ -142,10 +136,10 @@ public class TestTranspiration{
 		OmsTranspiration Transpiration = new OmsTranspiration();
 		Transpiration.inCentroids = stationsFC;
 		Transpiration.idCentroids="id";
-		Transpiration.centroidElevation="elevation";
+		Transpiration.centroidElevation="Elevation";
 		
         Transpiration.inDem = digitalElevationModel; 
-         
+        Transpiration.defaultStress = 1.0;
         while(temperatureReader.doProcess ) {
         	temperatureReader.nextRecord();
 
@@ -153,24 +147,14 @@ public class TestTranspiration{
             Transpiration.inAirTemperature = id2ValueMap;
             Transpiration.doHourly = true;
             Transpiration.doFullPrint = true;
-            Transpiration.typeOfTerrainCover = "MultiLayersCanopy";
+            Transpiration.typeOfTerrainCover = "FlatSurface";
             Transpiration.tStartDate = startDate;
-            Transpiration.tStep = timeStepMinutes;
+            Transpiration.temporalStep = timeStepMinutes;
 
-           
             windReader.nextRecord();
             id2ValueMap = windReader.outData;
             Transpiration.inWindVelocity = id2ValueMap;
 
-            stressSunReader.nextRecord();
-            id2ValueMap = stressSunReader.outData;
-            Transpiration.inStressSun = id2ValueMap;
-            
-            stressShReader.nextRecord();
-            id2ValueMap = stressShReader.outData;
-            Transpiration.inStressSh = id2ValueMap;
-            
-            
             humidityReader.nextRecord();
             id2ValueMap = humidityReader.outData;
             Transpiration.inRelativeHumidity = id2ValueMap;
@@ -187,6 +171,10 @@ public class TestTranspiration{
             id2ValueMap = longwaveReader.outData;
             Transpiration.inLongWaveRadiation = id2ValueMap;
             
+            soilHeatFluxReader.nextRecord();
+            id2ValueMap = soilHeatFluxReader.outData;
+            Transpiration.inSoilFlux = id2ValueMap;
+            
             pressureReader.nextRecord();
             id2ValueMap = pressureReader.outData;
             Transpiration.inAtmosphericPressure = id2ValueMap;
@@ -197,68 +185,57 @@ public class TestTranspiration{
             
             Transpiration.pm = pm;
             Transpiration.process();
-            
 
-
-            latentHeatSunWriter.inData = Transpiration.outLatentHeatSun;
+            latentHeatSunWriter.inData = Transpiration.outLatentHeat;
             latentHeatSunWriter.writeNextLine();
-			if (outPathToLatentHeatSun != null) {
-				latentHeatSunWriter.close();
-				}
-			latentHeatShadowWriter.inData = Transpiration.outLatentHeatShadow;
+
+			latentHeatShadowWriter.inData = Transpiration.outLatentHeatShade;
             latentHeatShadowWriter.writeNextLine();			 	
-			if (outPathToLatentHeatShadow != null) {
-				latentHeatShadowWriter.close();
-				}
-			
+
 			TranspirationWriter.inData = Transpiration.outTranspiration;
 			TranspirationWriter.writeNextLine();			 	
-			if (outPathToTranspiration != null) {
-				TranspirationWriter.close();
-				}
+
 			if (Transpiration.doFullPrint == true) {
-			leafTemperatureSunWriter.inData = Transpiration.outLeafTemperatureSun;
+			leafTemperatureSunWriter.inData = Transpiration.outLeafTemperature;
 			leafTemperatureSunWriter.writeNextLine();			 	
-			if (outPathToLeafTemperatureSun != null) {
-				leafTemperatureSunWriter.close();
-				}
-			leafTemperatureShadowWriter.inData = Transpiration.outLeafTemperatureShadow;
+
+			leafTemperatureShadowWriter.inData = Transpiration.outLeafTemperatureShade;
 			leafTemperatureShadowWriter.writeNextLine();			 	
-			if (outPathToLeafTemperatureShadow != null) {
-				leafTemperatureShadowWriter.close();
-				}
-			radiationSunWriter.inData = Transpiration.outRadiationSun;
+
+			radiationSunWriter.inData = Transpiration.outRadiation;
 			radiationSunWriter.writeNextLine();			 	
-			if (outPathToSun != null) {
-				radiationSunWriter.close();
-				}
-			radiationShadowWriter.inData = Transpiration.outRadiationShadow;
+
+			radiationShadowWriter.inData = Transpiration.outRadiationShade;
 			radiationShadowWriter.writeNextLine();			 	
-			if (outPathToShadow != null) {
-				radiationShadowWriter.close();
-				}
 			
-			sensibleSunWriter.inData = Transpiration.outSensibleHeatSun;
+			sensibleSunWriter.inData = Transpiration.outSensibleHeat;
 			sensibleSunWriter.writeNextLine();			 	
-			if (outPathToSensibleSun != null) {
-				sensibleSunWriter.close();
-				}
 			
-			sensibleShadowWriter.inData = Transpiration.outSensibleHeatShadow;
+			sensibleShadowWriter.inData = Transpiration.outSensibleHeatShade;
 			sensibleShadowWriter.writeNextLine();			 	
-			if (outPathToSensibleShadow != null) {
-				sensibleShadowWriter.close();
-				}
 			}
 	        }
        
-        temperatureReader.close();
+        temperatureReader.close();        
         windReader.close();
-        humidityReader.close();
+        humidityReader.close();     
         shortwaveReaderDirect.close();
         shortwaveReaderDiffuse.close();
         longwaveReader.close();
+        soilHeatFluxReader.close();
         pressureReader.close();
+        leafAreaIndexReader.close();
+        
+        latentHeatSunWriter.close();
+		latentHeatShadowWriter.close();
+		TranspirationWriter.close();
+		leafTemperatureSunWriter.close();
+		leafTemperatureShadowWriter.close();
+		radiationSunWriter.close();
+		radiationShadowWriter.close();
+		sensibleSunWriter.close();
+		sensibleShadowWriter.close();
+
     }
 
     private OmsTimeSeriesIteratorReader getTimeseriesReader( String path, String id, String startDate, String endDate,

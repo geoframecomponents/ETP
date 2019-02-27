@@ -245,7 +245,7 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 	
 	@Description("The first day of the simulation.")
 	@In
-	public int tStep;
+	public int temporalStep;
 	
 	public DateTime date;
 	double nullValue = -9999.0;
@@ -275,12 +275,12 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 	@Description("The latent heat.")
 	@Unit("mm h-1")
 	@Out
-	public HashMap<Integer, double[]> outLatentHeatSun;
+	public HashMap<Integer, double[]> outLatentHeat;
 	
 	@Description("The latent heat.")
 	@Unit("mm h-1")
 	@Out
-	public HashMap<Integer, double[]> outLatentHeatShadow;
+	public HashMap<Integer, double[]> outLatentHeatShade;
 	
 	@Description("The transpirated water.")
 	@Unit("mm h-1")
@@ -290,32 +290,32 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 	@Description("The sensible heat.")
 	@Unit("W m-2")
 	@Out
-	public HashMap<Integer, double[]> outSensibleHeatSun;
+	public HashMap<Integer, double[]> outSensibleHeat;
 	
 	@Description("The sensible heat.")
 	@Unit("W m-2")
 	@Out
-	public HashMap<Integer, double[]> outSensibleHeatShadow;
+	public HashMap<Integer, double[]> outSensibleHeatShade;
 	
 	@Description("The leaf Temperature.")
 	@Unit("K")
 	@Out
-	public HashMap<Integer, double[]> outLeafTemperatureSun;
+	public HashMap<Integer, double[]> outLeafTemperature;
 	
 	@Description("The leaf Temperature.")
 	@Unit("K")
 	@Out
-	public HashMap<Integer, double[]> outLeafTemperatureShadow;
+	public HashMap<Integer, double[]> outLeafTemperatureShade;
 	
 	@Description("The solar radiation absorbed by the sunlit canopy.")
 	@Unit("W m-2")
 	@Out
-	public HashMap<Integer, double[]> outRadiationSun;
+	public HashMap<Integer, double[]> outRadiation;
 	
 	@Description("The solar radiation absorbed by the shaded canopy.")
 	@Unit("W m-2")
 	@Out
-	public HashMap<Integer, double[]> outRadiationShadow;
+	public HashMap<Integer, double[]> outRadiationShade;
 	
 	@Description("Fraction of highlighted canopy.")
 	@Unit("-")
@@ -327,10 +327,15 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 	// OTHERS - DO
 	/////////////////////////////////////////////
 	@In
-	public HashMap<Integer, double[]> inStressSun;
+	public HashMap<Integer, double[]> inStress;
+	//public double inStressSun;
+	@In
+	public HashMap<Integer, double[]> inStressShade;
 
 	@In
-	public HashMap<Integer, double[]> inStressSh;
+	//public HashMap<Integer, double[]> inStressSun;
+	public double defaultStress;
+	
 	
 	@Description("Switch that defines if it is hourly.")
 	@In
@@ -358,13 +363,13 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 	@Execute
 	public void process() throws Exception {
 		if (doHourly == true) {
-			time =tStep*60;
+			time =temporalStep*60;
 
 			} else {
 			time = 86400;
 			}
 		DateTime startDateTime = formatter.parseDateTime(tStartDate);
-		DateTime date=(doHourly==false)?startDateTime.plusDays(step).plusHours(12):startDateTime.plusMinutes(tStep*step);
+		DateTime date=(doHourly==false)?startDateTime.plusDays(step).plusHours(12):startDateTime.plusMinutes(temporalStep*step);
 
 		stationCoordinates = getCoordinate(0,inCentroids, idCentroids);
 		Iterator<Integer> idIterator = stationCoordinates.keySet().iterator();
@@ -380,18 +385,18 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 		int leafStomaSide = propertyOfLeaf.stomaSide;
 		double longWaveEmittance = propertyOfLeaf.longWaveEmittance;
 		
-		outLatentHeatShadow = new HashMap<Integer, double[]>();
-		outLatentHeatSun = new HashMap<Integer, double[]>();
-		outTranspiration = new HashMap<Integer, double[]>();
+		outLatentHeatShade 	= new HashMap<Integer, double[]>();
+		outLatentHeat		= new HashMap<Integer, double[]>();
+		outTranspiration 	= new HashMap<Integer, double[]>();
 		if (doFullPrint == true) {
-			outLeafTemperatureSun 	= new HashMap<Integer, double[]>();
-			outRadiationSun 	= new HashMap<Integer, double[]>();
-			outRadiationShadow 	= new HashMap<Integer, double[]>();
-			outSensibleHeatSun 	= new HashMap<Integer, double[]>();
-			outSensibleHeatShadow 	= new HashMap<Integer, double[]>();
-			outRadiationShadow 	= new HashMap<Integer, double[]>();
-			outLeafTemperatureShadow= new HashMap<Integer, double[]>();
-			outCanopy 			= new HashMap<Integer, double[]>();
+			outLeafTemperature 		= new HashMap<Integer, double[]>();
+			outRadiation 			= new HashMap<Integer, double[]>();
+			outRadiationShade 		= new HashMap<Integer, double[]>();
+			outSensibleHeat 		= new HashMap<Integer, double[]>();
+			outSensibleHeatShade 	= new HashMap<Integer, double[]>();
+			outRadiationShade 		= new HashMap<Integer, double[]>();
+			outLeafTemperatureShade	= new HashMap<Integer, double[]>();
+			outCanopy 				= new HashMap<Integer, double[]>();
 			}
 		
 		Set<Entry<Integer, double[]>> entrySet = inAirTemperature.entrySet();
@@ -421,11 +426,7 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 			// Only if LAI is different from zero the method is computed
 			// if LAI is not 0 compute transpiration
 			if (leafAreaIndex != 0) {	
-							
-				double stressSun = inStressSun.get(basinId)[0];
-				double stressSh = inStressSh.get(basinId)[0];
-				//if (stressSun == nullValue) {shortWaveRadiationDirect = defaultShortWaveRadiationDirect;}
-				
+										
 				double shortWaveRadiationDirect = inShortWaveRadiationDirect.get(basinId)[0];
 				if (shortWaveRadiationDirect == nullValue) {shortWaveRadiationDirect = defaultShortWaveRadiationDirect;}
 				
@@ -434,7 +435,7 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				
 				double longWaveRadiation = inLongWaveRadiation.get(basinId)[0];
 				if (longWaveRadiation == nullValue) {longWaveRadiation = longWaveEmittance * stefanBoltzmannConstant * pow (airTemperature, 4);}//defaultLongWaveRadiation;}	
-				
+				longWaveRadiation = longWaveEmittance * stefanBoltzmannConstant * pow (airTemperature, 4);
 				double windVelocity = defaultWindVelocity;
 				if (inWindVelocity != null){windVelocity = inWindVelocity.get(basinId)[0];}
 				if (windVelocity == nullValue) {windVelocity = defaultWindVelocity;}
@@ -448,6 +449,16 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				if (inRelativeHumidity != null){relativeHumidity = inRelativeHumidity.get(basinId)[0];}
 				if (relativeHumidity == nullValue) {relativeHumidity = defaultRelativeHumidity;}				
 				
+				double soilFlux = defaultSoilFlux;
+				if (inSoilFlux != null){soilFlux = inSoilFlux.get(basinId)[0];}
+				if (soilFlux == nullValue) {soilFlux = defaultSoilFlux;}
+				
+				double stress = defaultStress;
+				if (inStress != null){stress = inStress.get(basinId)[0];}	
+
+				double stressShade = defaultStress;
+				if (inStressShade != null){stressShade = inStressShade.get(basinId)[0];}	
+
 				// Compute the saturation pressure
 				double saturationVaporPressure = pressure.computeSaturationVaporPressure(airTemperature, waterMolarMass, latentHeatEvaporation, molarGasConstant);			
 				// Compute the actual vapour pressure
@@ -463,42 +474,16 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 						airDensity, molarGasConstant, molarVolume, waterMolarMass, latentHeatEvaporation, poreDensity, poreArea, poreDepth, poreRadius);			
 
 				
-				transpiringSurface=CanopyModel.createTheCanopy(typeOfTerrainCover, delta, leafTemperature, airTemperature, stressSun, stressSh,
+				transpiringSurface=CanopyModel.createTheCanopy(typeOfTerrainCover, delta, leafTemperature, airTemperature, stress, stressShade,
 						latentHeatTransferCoefficient,sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure,
-						shortWaveRadiationDirect, longWaveRadiation, leafSide,date, latitude,longitude, doHourly, leafAreaIndex);
+						shortWaveRadiationDirect, longWaveRadiation, leafSide, date, latitude,longitude, doHourly, leafAreaIndex);			
 				
-				//if ("MultiLayersCanopy".equals(typeOfTerrainCover)) {		
-					//double solarElevationAngle = solarGeometry.getSolarElevationAngle(date, latitude,longitude, doHourly);
-				//	solarElevationAngle = ((solarElevationAngle>0)?solarElevationAngle:0);
-					
-					// compute the fraction of canopy in sunlight if a multi-layer model is adopted, otherwise the transpiring area is equal to 1
-				//	double leafInSunlit	=((solarElevationAngle>0)?radiationMethods.computeSunlitLeafAreaIndex(leafAreaIndex, solarElevationAngle):0);
-
-					// compute the shortwave radiation absorbed by the shaded canopy
-					//double shortWaveRadiationInSun=(solarElevationAngle>0)?radiationMethods.computeAbsordebRadiationSunlit(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect, shortWaveRadiationDiffuse):0;
-					//double leafInShadow	=leafAreaIndex - leafInSunlit;
-
-					//double shortWaveRadiationInShadow	=(solarElevationAngle>0)?radiationMethods.computeAbsordebRadiationShadow(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect, shortWaveRadiationDiffuse):0;
-				//	System.out.println("****	"+ leafInSunlit );//+"----	" +shortWaveRadiationInShadow);
-			//		}
-							//computeAbsordebRadiationSun(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect,shortWaveRadiationDiffuse):0;
-
-				//	double shortWaveRadiationInSun=(solarElevationAngle>0)?radiationMethods.computeAbsordebRadiationShadow(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect,shortWaveRadiationDiffuse):0;
-					//System.out.println("8888	"+ solarElevationAngle);
-					//System.out.println("++++	"+ shortWaveRadiationDirect);
-					//System.out.println("////	"+ (shortWaveRadiationDirect+shortWaveRadiationDiffuse));
-					//System.out.println("++++	"+ shortWaveRadiationInShadow);
-						
-					// compute the shortwave radiation absorbed by the shaded canopy
-					//double shortWaveRadiationInSun=(solarElevationAngle>0)?radiationMethods.computeAbsordebRadiationShadow(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect,shortWaveRadiationDiffuse):0;
-					
-				
-			 	transpiringSurface.setDelta(delta);
+				transpiringSurface.setDelta(delta);
 				transpiringSurface.setAirTemperature(airTemperature);
 				transpiringSurface.setSurfaceTemperature(leafTemperature);
 				
-				transpiringSurface.setStressSun(stressSun);
-				transpiringSurface.setStressSh(stressSh);
+				transpiringSurface.setStressSun(stress);
+				transpiringSurface.setStressSh(stressShade);
 
 				transpiringSurface.setLatentHeatTransferCoefficient(latentHeatTransferCoefficient);
 				transpiringSurface.setSensibleHeatTransferCoefficient(sensibleHeatTransferCoefficient);
@@ -508,8 +493,9 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				
 				transpiringSurface.setDirectShortWave(shortWaveRadiationDirect);
 				transpiringSurface.setDiffuseShortWave(shortWaveRadiationDiffuse);
-				transpiringSurface.setLongWaveRadiation( longWaveRadiation);
-				
+				transpiringSurface.setLongWaveRadiation(longWaveRadiation);
+				transpiringSurface.setSoilHeatFlux(soilFlux);
+
 				transpiringSurface.setSide(leafSide);
 				transpiringSurface.setLeafAreaIndex( leafAreaIndex);
 				
@@ -519,14 +505,12 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				transpiringSurface.setLatitude(latitude);
 				transpiringSurface.setLongitude(longitude);
 
-				//transpiringSurface.setleafTemperature = 100.0;
 				double leafInSunlight	= transpiringSurface.irradiatedSurface();
 				double leafInShadow		= transpiringSurface.shadedSurface();
 
 				double radiationCanopyInLight = transpiringSurface.incidentSolarRadiation();
 				double radiationCanopyInShadow = transpiringSurface.shadedSolarRadiation();
 
-			//	System.out.println(sensibleHeatFlux3);
 				double leafTemperatureSun 		= transpiringSurface.computeSurfaceTemperatureIrradiatedSurface();		
 				double leafTemperatureShadow	= transpiringSurface.computeSurfaceTemperatureShadedSurface();
 
@@ -536,106 +520,12 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 				double sensibleHeatFluxLight	= transpiringSurface.computeSensibleHeatFluxIrradiatedSurface();
 				double sensibleHeatFluxShadow	= transpiringSurface.computeSensibleHeatFluxShadedSurface();
 
-				//System.out.println(sensibleHeatFlux3);
-
-			//	double Temp = transpiringSurface.computeSurfaceTemperatureIrradiatedSurface();
-			//	double latentHeatFlux2 	= transpiringSurface.computeLatentHeatFluxShadedSurface();
-			//	double sensibleHeatFlux3 = transpiringSurface.computeSensibleHeatFluxShadedSurface();
-				//double gibbo = transpiringSurface.franco(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect, shortWaveRadiationDiffuse);
-				
-			/*	System.out.println("\n");
-				System.out.println("Date		"+date);
-				//System.out.println("Temp		"+leafTemperatureSun+"	"+leafTemperatureShadow+"	"+airTemperature);
-				//System.out.println("Lai		"+leafInSunlight+"	"+leafInShadow);
-				System.out.println("El		"+latentHeatFluxLight+"	"+latentHeatFluxShadow);
-				System.out.println("Hl		"+sensibleHeatFluxLight+"	"+sensibleHeatFluxShadow);
-				System.out.println("\n");*/
-
-				/*System.out.println("LAI1	"+leafInSunlit);
-				System.out.println("Air		"+airTemperature);			
-				System.out.println("temp second	"+leafTemperature);
-
-				System.out.println("LAI3	"+latentHeatFlux);
-				System.out.println("LAI4	"+sensibleHeatFlux);*/
-				//double leafTemperatureSun = leafTemperature;
-				// Find the leaf temperature in sunlight and compute the new fluxes
-				//double sensibleHeatFlux	= leafInSunlit*sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSun, airTemperature);
-				//double latentHeatFlux		= leafInSunlit*latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-				//double netLongWaveRadiation= leafInSunlit*radiationMethods.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureSun, stefanBoltzmannConstant);
-				
-				
-				/*if (solarElevationAngle>0) {
-					// compute the shortwave radiation absorbed by the sunlit canopy
-					double shortWaveRadiationInSun =(doMultiLayer==true)?((solarElevationAngle>0)?radiationMethods.computeAbsordebRadiationSunlit(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect,shortWaveRadiationDiffuse):0):shortWaveRadiationDirect;
-					
-					// compute the fraction of canopy in sunlight if a multi-layer model is adopted, otherwise the transpiring area is equal to 1
-					double leafInSunlit	=(doMultiLayer==true)?((solarElevationAngle>0)?radiationMethods.computeSunlitLeafAreaIndex(leafAreaIndex, solarElevationAngle):0):1;
-					
-					double leafTemperatureSun = leafTemperature;
-					// compute the equilibrium leaf temperature
-					leafTemperatureSun	= computeLeafTemperature(leafInSunlit, leafSide, longWaveEmittance, sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiationInSun,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
-					// Find the leaf temperature in sunlight and compute the new fluxes
-					double sensibleHeatFlux	= leafInSunlit*sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSun, airTemperature);
-					double latentHeatFlux		= leafInSunlit*latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-					//double netLongWaveRadiation= leafInSunlit*radiationMethods.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureSun, stefanBoltzmannConstant);
-					
-					// compute the shortwave radiation absorbed by the shaded canopy
-					double shortWaveRadiationInShadow=(solarElevationAngle>0)?radiationMethods.computeAbsordebRadiationShadow(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect,shortWaveRadiationDiffuse):0;
-					double latentHeatFluxShade = 0;
-					double sensibleHeatFluxShade = 0;
-					//double netLongWaveRadiationShade = 0;
-					double leafTemperatureShade = leafTemperature;
-
-					if (doMultiLayer == true){
-						double leafInShade = 1 - leafInSunlit;
-						leafTemperatureShade = computeLeafTemperature(leafInSunlit, leafSide, longWaveEmittance,sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiationInShadow,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
-						// Find the leaf temperature in sunlight and compute the new fluxes
-						sensibleHeatFluxShade = leafInShade*sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureShade, airTemperature);
-						latentHeatFluxShade = leafInShade*latentHeat.computeLatentHeatFlux(delta, leafTemperatureShade, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-						//netLongWaveRadiationShade = leafInShade*radiationMethods.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureShade, stefanBoltzmannConstant);
-						}								
-					}
-				else {
-					// compute the shortwave radiation absorbed by the sunlit canopy
-					//double shortWaveRadiationInSun =(doMultiLayer==true)?((solarElevationAngle>0)?radiationMethods.computeAbsordebRadiationSunlit(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect,shortWaveRadiationDiffuse):0):shortWaveRadiationDirect;
-					
-					// compute the fraction of canopy in sunlight if a multi-layer model is adopted, otherwise the transpiring area is equal to 1
-					//double leafInSunlit	=(doMultiLayer==true)?((solarElevationAngle>0)?radiationMethods.computeSunlitLeafAreaIndex(leafAreaIndex, solarElevationAngle):0):1;
-					
-					//double leafTemperatureSun = leafTemperature;
-					// compute the equilibrium leaf temperature
-					//leafTemperatureSun	= computeLeafTemperature(leafInSunlit, leafSide, longWaveEmittance, sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiationInSun,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
-					// Find the leaf temperature in sunlight and compute the new fluxes
-					//double sensibleHeatFlux	= leafInSunlit*sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureSun, airTemperature);
-					//double latentHeatFlux		= leafInSunlit*latentHeat.computeLatentHeatFlux(delta, leafTemperatureSun, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-					//double netLongWaveRadiation= leafInSunlit*radiationMethods.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureSun, stefanBoltzmannConstant);
-					
-					// compute the shortwave radiation absorbed by the shaded canopy
-					double shortWaveRadiationInShadow=(solarElevationAngle>0)?radiationMethods.computeAbsordebRadiationShadow(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect,shortWaveRadiationDiffuse):0;
-					double latentHeatFluxShade = 0;
-					double sensibleHeatFluxShade = 0;
-					//double netLongWaveRadiationShade = 0;
-					double leafTemperatureShade = leafTemperature;
-
-					//if (doMultiLayer == true){
-						double leafInShade = 1.0; //- leafInSunlit;
-						leafTemperatureShade = computeLeafTemperature(leafInShade, leafSide, longWaveEmittance,sensibleHeatTransferCoefficient,latentHeatTransferCoefficient,airTemperature,shortWaveRadiationInShadow,longWaveRadiation,vaporPressure, saturationVaporPressure,delta);
-						// Find the leaf temperature in sunlight and compute the new fluxes
-						sensibleHeatFluxShade = leafInShade*sensibleHeat.computeSensibleHeatFlux(sensibleHeatTransferCoefficient, leafTemperatureShade, airTemperature);
-						latentHeatFluxShade = leafInShade*latentHeat.computeLatentHeatFlux(delta, leafTemperatureShade, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-						//netLongWaveRadiationShade = leafInShade*radiationMethods.computeLongWaveRadiationBalance(leafSide, longWaveEmittance, airTemperature, leafTemperatureShade, stefanBoltzmannConstant);
-					//	}								
-					}
-				}
-				//TranspirationShadow = latentHeat.computeLatentHeatFlux(delta, leafTemperatureShade, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
-				*/
+		
 			double latentHeatSun = latentHeatFluxLight;//latentHeatFluxLight;//+latentHeatFluxShadow;	
 
 			double latentHeatShadow = latentHeatFluxShadow;//latentHeatFluxLight;//+latentHeatFluxShadow;	
 			totalTranspiration = (latentHeatFluxLight+latentHeatFluxShadow)*(time/latentHeatEvaporation);
-			//double totalSensibleHeat = sensibleHeatFluxLight+sensibleHeatFluxShadow;
-			//double outputRadiationCanopyInSun = radiationCanopyInLight;
-			//double outputRadiationCanopyInShadow = radiationCanopyInShadow;
+			
 			if (doFullPrint == true) {				
 				storeResultFull((Integer)basinId, latentHeatSun, latentHeatShadow, totalTranspiration, sensibleHeatFluxLight,sensibleHeatFluxShadow,
 						leafTemperatureSun, leafTemperatureShadow,radiationCanopyInLight, radiationCanopyInShadow,leafInSunlight);
@@ -652,29 +542,6 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 		step++;	
 			}
 		
-		
-	
-	/*private double computeLeafTemperature(
-			double leafInSunlit,
-			double side,
-			double emissivity,
-			double sensibleHeatTransferCoefficient,
-			double latentHeatTransferCoefficient, 
-			double airTemperature, 
-			double shortWaveRadiation,
-			double longWaveRadiation,
-			double vaporPressure,
-			double saturationVaporPressure,
-			double delta) {
-		double leafTemperature1 = (shortWaveRadiation/leafInSunlit + sensibleHeatTransferCoefficient*airTemperature +
-				latentHeatTransferCoefficient*(delta*airTemperature + vaporPressure - saturationVaporPressure) + 
-				side * longWaveRadiation * 4 );
-		double leafTemperature2 =(1/(sensibleHeatTransferCoefficient + latentHeatTransferCoefficient * delta +	
-				side * longWaveRadiation/airTemperature * 4));
-		double leafTemperature = leafTemperature1*leafTemperature2;
-		return leafTemperature;	
-	}*/
-	
 	private LinkedHashMap<Integer, Coordinate> getCoordinate(int nStaz,
 			SimpleFeatureCollection collection, String idField)
 					throws Exception {
@@ -706,87 +573,33 @@ public class OmsTranspiration extends JGTModel implements Parameters {
 
 		return id2CoordinatesMcovarianceMatrix;
 	}
-	//public double irradiatedSurface() {
-		//double areaInSunlight = 1;
-		//return areaInSunlight;
-	//}
-	/*public double irradiatedSurface(String type, double delta, double leafTemperature, double airTemperature, double latentHeatTransferCoefficient,
-			double sensibleHeatTransferCoefficient, double vaporPressure, double saturationVaporPressure,
-			double shortWaveRadiation, double longWaveRadiation, double side) {
 
-		transpiringSurface=CanopyModel.createTheCanopy(type, delta, leafTemperature, airTemperature, latentHeatTransferCoefficient,
-				sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure,
-				shortWaveRadiation, longWaveRadiation, side);
-		double result=transpiringSurface.irradiatedSurface();
-
-		return result;
-	}
-	
-	public double computeLatentHeatExchange(String type, double delta, double leafTemperature, double airTemperature, double latentHeatTransferCoefficient,
-			double sensibleHeatTransferCoefficient, double vaporPressure, double saturationVaporPressure,
-			double shortWaveRadiation, double longWaveRadiation, double side) {
-
-		transpiringSurface=CanopyModel.createTheCanopy(type, delta, leafTemperature, airTemperature, latentHeatTransferCoefficient,
-				sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure,
-				shortWaveRadiation, longWaveRadiation, side);
-		double result=transpiringSurface.computeLatentHeatFlux();
-
-		return result;
-	}
-	
-	public double computeSensibleHeatExchange(String type, double delta, double leafTemperature, double airTemperature, double latentHeatTransferCoefficient,
-
-			double sensibleHeatTransferCoefficient, double vaporPressure, double saturationVaporPressure,
-			double shortWaveRadiation, double longWaveRadiation, double side) {
-
-		transpiringSurface=CanopyModel.createTheCanopy(type, delta, leafTemperature, airTemperature, latentHeatTransferCoefficient,
-				sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure,
-				shortWaveRadiation, longWaveRadiation, side);
-		double result=transpiringSurface.computeSensibleHeatFlux();
-
-		return result;
-	}
-	
-	public double computeTemperature(String type, double delta, double leafTemperature, double airTemperature, double latentHeatTransferCoefficient,
-			double sensibleHeatTransferCoefficient, double vaporPressure, double saturationVaporPressure,
-			double shortWaveRadiation, double longWaveRadiation, double side) {
-
-		transpiringSurface=CanopyModel.createTheCanopy(type, delta, leafTemperature, airTemperature, latentHeatTransferCoefficient,
-				sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure,
-				shortWaveRadiation, longWaveRadiation, side);
-		double result=transpiringSurface.computeSurfaceTemperature();
-
-		return result;
-	}*/
-	
 	private void storeResultFull(int ID,double latentHeatSun, double latentHeatShadow,double totalTranspiration, 
 			double sensibleHeatFluxLight, double sensibleHeatFluxShadow,
 			double leafTemperatureSun, double leafTemperatureShadow, 
 			double radiationCanopyInLight, double radiationCanopyInShadow, 
 			double leafInSunlight) 
-			throws SchemaException {
+			throws SchemaException {		
 		
-	//	outLatentHeatShadow = new HashMap<Integer, double[]>();
-	//	outLatentHeatSun = new HashMap<Integer, double[]>();
-		outLatentHeatSun.put(		ID, new double[]{latentHeatSun});
-		outLatentHeatShadow.put(		ID, new double[]{latentHeatShadow});
-		outTranspiration.put(	ID, new double[]{totalTranspiration});
+		outLatentHeat.put(ID, new double[]{latentHeatSun});
+		outLatentHeatShade.put(ID, new double[]{latentHeatShadow});
+		outTranspiration.put(ID, new double[]{totalTranspiration});
 		
-		outSensibleHeatSun.put(	ID, new double[]{sensibleHeatFluxLight});
-		outSensibleHeatShadow.put(	ID, new double[]{sensibleHeatFluxShadow});
+		outSensibleHeat.put(ID, new double[]{sensibleHeatFluxLight});
+		outSensibleHeatShade.put(ID, new double[]{sensibleHeatFluxShadow});
 
-		outLeafTemperatureSun.put(	ID, new double[]{leafTemperatureSun});
-		outLeafTemperatureShadow.put(	ID, new double[]{leafTemperatureShadow});
+		outLeafTemperature.put(ID, new double[]{leafTemperatureSun});
+		outLeafTemperatureShade.put(ID, new double[]{leafTemperatureShadow});
 
-		outRadiationSun.put(	ID, new double[]{radiationCanopyInLight});
-		outRadiationShadow.put(	ID, new double[]{radiationCanopyInShadow});
-		outCanopy.put(			ID, new double[]{leafInSunlight});
+		outRadiation.put(ID, new double[]{radiationCanopyInLight});
+		outRadiationShade.put(ID, new double[]{radiationCanopyInShadow});
+		outCanopy.put(ID, new double[]{leafInSunlight});
 		}
 	private void storeResult(int ID,double latentHeatSun, double latentHeatShadow,double totalTranspiration) 
 			throws SchemaException {
-		outLatentHeatSun.put(		ID, new double[]{latentHeatSun});
-		outLatentHeatShadow.put(		ID, new double[]{latentHeatShadow});
-		outTranspiration.put(	ID, new double[]{totalTranspiration});
+		outLatentHeat.put(ID, new double[]{latentHeatSun});
+		outLatentHeatShade.put(ID, new double[]{latentHeatShadow});
+		outTranspiration.put(ID, new double[]{totalTranspiration});
 		}
 	
 	private Point[] getPoint(Coordinate coordinate, CoordinateReferenceSystem sourceCRS, CoordinateReferenceSystem targetCRS)

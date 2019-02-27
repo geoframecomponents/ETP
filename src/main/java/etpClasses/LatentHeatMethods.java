@@ -36,7 +36,7 @@ public class LatentHeatMethods {
 		// g_tw,mol
 		double molarTotalConductance = totalConductance*40;
 		// c_E
-		double latentHeatTransferCoefficient = waterMolarMass * latentHeatEvaporation * molarTotalConductance / atmosphericPressure;
+		double latentHeatTransferCoefficient = (waterMolarMass * latentHeatEvaporation * molarTotalConductance) / atmosphericPressure;
 		return latentHeatTransferCoefficient;	
 		}
 	public double computeLatentHeatFlux(double delta, double leafTemperature, double airTemperature, double latentHeatTransferCoefficient,double sensibleHeatTransferCoefficient, double vaporPressure, double saturationVaporPressure) {

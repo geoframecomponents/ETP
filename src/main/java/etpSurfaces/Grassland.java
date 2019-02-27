@@ -42,6 +42,7 @@ public class Grassland implements TranspiringSurface{
 	double shortWaveRadiationDirect; 
 	double shortWaveRadiationDiffuse;
 	double longWaveRadiation;
+	double soilHeatFlux;
 	double shortWaveCanopyLight; 
 	double shortWaveCanopyShadow; 
 
@@ -58,6 +59,9 @@ public class Grassland implements TranspiringSurface{
 	double latitude;
 	double longitude;
 	double solarElevationAngle;
+	
+	double stressSun;
+	double stressSh;
 
 //	double solarElevationAngle;
 	//double shortWaveRadiationDiffuse;
@@ -65,6 +69,9 @@ public class Grassland implements TranspiringSurface{
 	public void setDelta(double delta){ this.delta = delta;}
 	public void setAirTemperature(double airTemperature){ this.airTemperature = airTemperature; }
 	public void setSurfaceTemperature(double leafTemperature){ this.surfaceIrradiatedTemperature = leafTemperature;} 
+	
+	public void setStressSun(double stressSun){ this.stressSun = stressSun;} 
+	public void setStressSh(double stressSh){ this.stressSh = 0;} 
 	
 	public void setLatentHeatTransferCoefficient(double latentHeatTransferCoefficient){ this.latentHeatTransferCoefficient = latentHeatTransferCoefficient;} 
 	public void setSensibleHeatTransferCoefficient(double sensibleHeatTransferCoefficient){ this.sensibleHeatTransferCoefficient = sensibleHeatTransferCoefficient;}
@@ -76,7 +83,8 @@ public class Grassland implements TranspiringSurface{
 	public void setDiffuseShortWave(double shortWaveRadiationDiffuse){ this.shortWaveRadiationDiffuse = shortWaveRadiationDiffuse; }
 
 	public void setLongWaveRadiation(double longWaveRadiation){ this.longWaveRadiation = longWaveRadiation; }
-	
+	public void setSoilHeatFlux(double soilHeatFlux){ this.soilHeatFlux = soilHeatFlux; }
+
 	public void setSide(double side){ this.side = side;}
 	public void setLeafAreaIndex(double leafAreaIndex){ this.leafAreaIndex = leafAreaIndex;}
 	
@@ -109,7 +117,7 @@ public class Grassland implements TranspiringSurface{
 	@Override
 	public double computeLatentHeatIrradiatedSurface() {
 		// Computation of the latent heat flux from leaf [J m-2 s-1]
-		double latentHeatLight = surfaceInSunlight*latentHeat.computeLatentHeatFlux(delta, surfaceIrradiatedTemperature, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
+		double latentHeatLight =  stressSun*surfaceInSunlight*latentHeat.computeLatentHeatFlux(delta, surfaceIrradiatedTemperature, airTemperature, latentHeatTransferCoefficient, sensibleHeatTransferCoefficient, vaporPressure, saturationVaporPressure);
 		//double latentHeatLight = surfaceInSunlight*(sensibleHeatTransferCoefficient* (delta * (surfaceIrradiatedTemperature - airTemperature) + saturationVaporPressure - vaporPressure))/(sensibleHeatTransferCoefficient/latentHeatTransferCoefficient);
 		return latentHeatLight;	
 	}
@@ -122,11 +130,16 @@ public class Grassland implements TranspiringSurface{
 	
 	@Override
 	public double computeSurfaceTemperatureIrradiatedSurface() {
-		double surfaceTemperatureIrradiated1 = (shortWaveCanopyLight/surfaceInSunlight + sensibleHeatTransferCoefficient*airTemperature +
-				latentHeatTransferCoefficient*(delta*airTemperature + vaporPressure - saturationVaporPressure) + 
-				side * longWaveRadiation * 4 );
-		double surfaceTemperatureIrradiated2 =(1/(sensibleHeatTransferCoefficient + latentHeatTransferCoefficient * delta +	
-				side * longWaveRadiation/airTemperature * 4));
+	
+		double surfaceTemperatureIrradiated1 = (shortWaveCanopyLight - soilHeatFlux + 
+				sensibleHeatTransferCoefficient*airTemperature*surfaceInSunlight +
+				stressSun * 
+				latentHeatTransferCoefficient*(delta*airTemperature + vaporPressure - saturationVaporPressure)*surfaceInSunlight  + 
+				side * longWaveRadiation * 4 *surfaceInSunlight);
+		double surfaceTemperatureIrradiated2 =(1/(
+				sensibleHeatTransferCoefficient*surfaceInSunlight + 
+				stressSun*latentHeatTransferCoefficient * delta *surfaceInSunlight +	
+				side * longWaveRadiation/airTemperature * 4*surfaceInSunlight));
 		double surfaceTemperatureIrradiated = surfaceTemperatureIrradiated1*surfaceTemperatureIrradiated2;
 		this.surfaceIrradiatedTemperature = surfaceTemperatureIrradiated;
 		return surfaceIrradiatedTemperature;	
@@ -154,7 +167,7 @@ public class Grassland implements TranspiringSurface{
 			
 	@Override
 	public double incidentSolarRadiation() {
-		double incidentSolarRadiationLight = radiationProperties.computeAbsordebRadiationSunlit(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect, shortWaveRadiationDiffuse);
+		double incidentSolarRadiationLight = shortWaveRadiationDirect + shortWaveRadiationDiffuse;// radiationProperties.computeAbsordebRadiationSunlit(leafAreaIndex, solarElevationAngle, shortWaveRadiationDirect, shortWaveRadiationDiffuse);
 		this.shortWaveCanopyLight = incidentSolarRadiationLight;
 		return shortWaveCanopyLight;
 	}
