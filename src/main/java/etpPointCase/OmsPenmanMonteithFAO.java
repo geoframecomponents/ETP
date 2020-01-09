@@ -172,6 +172,11 @@ public class OmsPenmanMonteithFAO extends JGTModel {
 	int step;
 	public int time;
 	
+	@Description("Height of the canopy.")
+	@Unit("[m]")
+	@In
+	public double canopyHeight = 0.12;
+	
     double nullValue = -9999;
 	double latentHeatEvaporation = 2.45*pow(10,6);
 
@@ -205,6 +210,7 @@ public class OmsPenmanMonteithFAO extends JGTModel {
 
 			double windVelocity = inWindVelocity.get(basinId)[0];
 			if (windVelocity == (nullValue)) {windVelocity = defaultWindVelocity;}		
+			double windSpeedH = (windVelocity * (Math.log(67.8*canopyHeight - 5.42)))/4.87;
 			
 			double atmosphericPressure = inAtmosphericPressure.get(basinId)[0]/1000;
 			if (atmosphericPressure == (nullValue/1000)) {atmosphericPressure = defaultAtmosphericPressure;}		
@@ -212,7 +218,9 @@ public class OmsPenmanMonteithFAO extends JGTModel {
 			double relativeHumidity = inRelativeHumidity.get(basinId)[0];
 			if (relativeHumidity == (nullValue)) {relativeHumidity = defaultRelativeHumidity;}	
 
-			double soilMosture = inSoilMosture.get(basinId)[0];
+
+			double soilMosture = defaultSoilMosture;
+			if (inSoilMosture != null){soilMosture = inSoilMosture.get(basinId)[0];}
 			if (soilMosture == (nullValue)) {soilMosture = defaultSoilMosture;}
 			
 			double soilFlux = defaultSoilFlux;
@@ -223,12 +231,12 @@ public class OmsPenmanMonteithFAO extends JGTModel {
 			double rootZoneDepletation = 1000 * (waterFieldCapacity - soilMosture) * rootsDepth;
 
 			double waterStressCoefficient=(rootZoneDepletation<readilyAvailableWater)? 1:(totalAvailableWater - rootZoneDepletation) / (totalAvailableWater - readilyAvailableWater);
-			/*System.out.println("");
+		/*	System.out.println("");
 			System.out.println("soilMosture            "+soilMosture);
 			System.out.println("totalAvailableWater    "+totalAvailableWater);
 			System.out.println("rootZone               "+rootZoneDepletation);
 			System.out.println("readilyAvailableWater  "+readilyAvailableWater);
-			System.out.println("waterStressCoefficient "+waterStressCoefficient);*/	
+			System.out.println("waterStressCoefficient "+waterStressCoefficient);	*/
 			int hourOfDay = date.getHourOfDay();
 
 			boolean islight = false;
@@ -236,15 +244,16 @@ public class OmsPenmanMonteithFAO extends JGTModel {
 				islight = true;
 			}
 			double soilFluxparameter;
-			if (islight == true) {
+			if (netRadiation > 0) {
 				soilFluxparameter = 0.35;
 				}
 			else {
 				soilFluxparameter = 0.75;
 				}     
 			double soilHeatFlux = (soilFlux==defaultSoilFlux)?(soilFluxparameter * netRadiation):soilFlux;			
-
-            double etp = compute(netRadiation, windVelocity, airTemperature, relativeHumidity, atmosphericPressure, soilHeatFlux)*waterStressCoefficient*cropCoefficient;
+		//	System.out.println(waterStressCoefficient);
+            double etp = compute(netRadiation, windSpeedH, airTemperature, relativeHumidity, atmosphericPressure, soilHeatFlux)*waterStressCoefficient*cropCoefficient;
+            etp=(etp<0)?0:etp;
             outLatentHeatFao.put(basinId, new double[]{etp * latentHeatEvaporation / 86400});
             outEvapotranspirationFao.put(basinId, new double[]{etp*time/86400});
         }

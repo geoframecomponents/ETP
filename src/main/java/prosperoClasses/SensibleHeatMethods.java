@@ -1,4 +1,4 @@
-package etpClasses;
+package prosperoClasses;
 import static java.lang.Math.pow;
 import static java.lang.Math.abs;
 

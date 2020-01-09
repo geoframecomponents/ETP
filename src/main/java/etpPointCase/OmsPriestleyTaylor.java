@@ -179,8 +179,13 @@ public class OmsPriestleyTaylor extends JGTModel {
 			if (soilFlux == nullValue) {soilFlux = defaultSoilFlux;}
 			soilFlux = soilFlux * 86400/1E6;			
 						
-			double atmosphericPressure = inAtmosphericPressure.get(basinId)[0]/1000;
-			if (atmosphericPressure == (nullValue/1000)) {atmosphericPressure = defaultAtmosphericPressure;}		
+			double atmosphericPressure = defaultAtmosphericPressure;
+			if (inAtmosphericPressure != null){atmosphericPressure = inAtmosphericPressure.get(basinId)[0]/1000;}
+			if (atmosphericPressure == (nullValue/1000)) {atmosphericPressure = defaultAtmosphericPressure;}
+//			soilFlux = soilFlux * 86400/1E6;			
+//			
+//			double atmosphericPressure = inAtmosphericPressure.get(basinId)[0]/1000;
+//			if (atmosphericPressure == (nullValue/1000)) {atmosphericPressure = defaultAtmosphericPressure;}		
 	        //System.out.println("soilFlux    "+soilFlux);	
 			//double atmosphericPressure = inAtmosphericPressure.get(basinId)[0];
 	        //System.out.println("atmosphericPressure    "+inAtmosphericPressure.get(basinId)[0]);

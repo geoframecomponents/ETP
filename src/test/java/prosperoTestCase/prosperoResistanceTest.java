@@ -1,6 +1,8 @@
-package etpTestPointCase;
+package prosperoTestCase;
 
 import org.junit.Test;
+
+import prospero.OmsProsperoStress;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -11,10 +13,8 @@ import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
 
-import etpPointCase.OmsResistance;
 
-
-public class ResistanceTest {
+public class prosperoResistanceTest {
 	@Test
     public void Test() throws Exception {
 		String startDate= "2015-07-21 00:00";
@@ -30,7 +30,7 @@ public class ResistanceTest {
         String inPathToSoilMosture			="resources/Input/dataET_point/SoilMosture.csv";
         String inPathToPressure 			="resources/Input/dataET_point/AtmosphericPressure.csv";
         
-        String inPathToCentroids 			="resources/Input/dataET_point/CentroidDem.shp";
+       // String inPathToCentroids 			="resources/Input/dataET_point/CentroidDem.shp";
                    
 		String outPathToStressResistance	="resources/Output/stressResistance.csv";
 
@@ -41,10 +41,10 @@ public class ResistanceTest {
         OmsTimeSeriesIteratorReader soilMostureReader	= getTimeseriesReader(inPathToSoilMosture, fId, startDate, endDate, timeStepMinutes);
 
                 
-		OmsShapefileFeatureReader centroidsReader 		= new OmsShapefileFeatureReader();
+		/*OmsShapefileFeatureReader centroidsReader 		= new OmsShapefileFeatureReader();
         centroidsReader.file = inPathToCentroids;
 		centroidsReader.readFeatureCollection();
-		SimpleFeatureCollection stationsFC = centroidsReader.geodata;
+		SimpleFeatureCollection stationsFC = centroidsReader.geodata;*/
 		
 		OmsTimeSeriesIteratorWriter stressResistanceWriter = new OmsTimeSeriesIteratorWriter();
 		stressResistanceWriter.file = outPathToStressResistance;
@@ -52,17 +52,18 @@ public class ResistanceTest {
 		stressResistanceWriter.tTimestep = timeStepMinutes;
 		stressResistanceWriter.fileNovalue="-9999";
 	
-		OmsResistance Resistance = new OmsResistance();
-		Resistance.inCentroids = stationsFC;
-		Resistance.idCentroids="id";
-		Resistance.centroidElevation="Elevation";	
-		
+		OmsProsperoStress Resistance = new OmsProsperoStress();
+	//	Resistance.inCentroids = stationsFC;
+	//	Resistance.idCentroids="id";
+		//Resistance.centroidElevation="Elevation";	
+		Resistance.elevation=100;	
+
 		Resistance.alpha = 0.005;
         Resistance.theta = 0.85;
-        Resistance.d = 1.1;
-        Resistance.e = 0.63;
+       // Resistance.d = 1.1;
+        Resistance.VPD0 = 5.0;
      	
-        Resistance.T1 = -5.0;
+        Resistance.Tl = -5.0;
         Resistance.T0 = 20.0;
         Resistance.Th = 45.0;
      	

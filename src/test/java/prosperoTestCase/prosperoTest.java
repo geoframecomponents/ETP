@@ -1,4 +1,4 @@
-package etpTestPointCase;
+package prosperoTestCase;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 
@@ -9,25 +9,22 @@ import org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
-
-//import etp.Leaf;
-//import org.jgrasstools.gears.utils.math.NumericsUtilities;
-import etpPointCase.OmsTranspiration;
-
 import org.junit.*;
 
+//import etpPointCase.OmsTranspiration;
+import prospero.OmsProspero;
 //import static org.junit.Assert.assertTrue;
 /**
  * Test Schymanski & Or evapotranspiration.
  * @author Michele Bottazzi (michele.bottazzi@gmail.com)
  */
 //@SuppressWarnings("nls")
-public class TestTranspiration{
+public class prosperoTest{
 	@Test
     public void Test() throws Exception {
-		String startDate= "2015-07-21 00:00";
-        String endDate	= "2015-07-21 23:00";
-        int timeStepMinutes = 60;
+		String startDate= "2012-07-15 00:30";
+        String endDate	= "2012-07-15 23:30";
+        int timeStepMinutes = 30;
         String fId = "val";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
@@ -38,19 +35,23 @@ public class TestTranspiration{
 		DEMreader.geodataNovalue = Double.NaN;
 		DEMreader.process();
 		GridCoverage2D digitalElevationModel = DEMreader.outRaster;
+              
+        String inPathToTemperature 		="resources/Input/dataET_point/Viote/Viote_Temp.csv";
+        String inPathToWind 			="resources/Input/dataET_point/Viote/Viote_Wind.csv";
+        String inPathToRelativeHumidity ="resources/Input/dataET_point/Viote/Viote_RH.csv";
+        String inPathToShortWaveRadiationDirect="resources/Input/dataET_point/Viote/Viote_SwDirect.csv";
+        String inPathToShortWaveRadiationDiffuse="resources/Input/dataET_point/Viote/Viote_null.csv";
+        String inPathToLWRad 			="resources/Input/dataET_point/Viote/Viote_null.csv";
+        String inPathToNetRad 			="resources/Input/dataET_point/Viote/Viote_Net.csv";
 
-        String inPathToTemperature 		="resources/Input/dataET_point/AirTemperature.csv";
-        String inPathToWind 			="resources/Input/dataET_point/WindVelocity.csv";
-        String inPathToRelativeHumidity ="resources/Input/dataET_point/RelativeHumidity.csv";
-        String inPathToShortWaveRadiationDirect="resources/Input/dataET_point/ShortWaveRadiationDirect.csv";
-        String inPathToShortWaveRadiationDiffuse="resources/Input/dataET_point/ShortWaveRadiationDiffuse.csv";
-        String inPathToLWRad 			="resources/Input/dataET_point/LongWaveRadiation.csv";
-        String inPathToSoilHeatFlux 	="resources/Input/dataET_point/SoilHeatFlux.csv";
+        String inPathToSoilHeatFlux 	="resources/Input/dataET_point/Viote/Viote_GHF.csv";
 
-        String inPathToPressure 		="resources/Input/dataET_point/AtmosphericPressure.csv";
-        String inPathToLai 				="resources/Input/dataET_point/LeafAreaIndex.csv";
+
+        String inPathToPressure 		="resources/Input/dataET_point/Viote/Viote_Pres.csv";
+        String inPathToLai 				="resources/Input/dataET_point/Viote/Viote_Lai.csv";
         String inPathToCentroids 		="resources/Input/dataET_point/CentroidDem.shp";
-       
+
+        
         String outPathToLatentHeatSun			="resources/Output/LatentHeatSun.csv";
         String outPathToLatentHeatShadow		="resources/Output/LatentHeatShadow.csv";
         String outPathToTranspiration			="resources/Output/Transpiration.csv";
@@ -58,12 +59,12 @@ public class TestTranspiration{
 		String outPathToLeafTemperatureShadow	="resources/Output/LeafTemperatureSh.csv";
 		String outPathToSensibleSun				="resources/Output/sensibleSun.csv";
 		String outPathToSensibleShadow			="resources/Output/sensibleShadow.csv";
+        String outPathToSoilEvaporation 		="resources/Output/Evaporation.csv";
 
-		
 		String outPathToSun				="resources/Output/RadSun.csv";
 		String outPathToShadow			="resources/Output/RadShadow.csv";
-
-		
+		String outPathToCanopy			="resources/Output/Canopy.csv";
+	
         OmsTimeSeriesIteratorReader temperatureReader	= getTimeseriesReader(inPathToTemperature, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader windReader 		 	= getTimeseriesReader(inPathToWind, fId, startDate, endDate, timeStepMinutes);
         OmsTimeSeriesIteratorReader humidityReader 		= getTimeseriesReader(inPathToRelativeHumidity, fId, startDate, endDate, timeStepMinutes);
@@ -73,8 +74,9 @@ public class TestTranspiration{
         OmsTimeSeriesIteratorReader pressureReader 		= getTimeseriesReader(inPathToPressure, fId, startDate, endDate,timeStepMinutes);
         OmsTimeSeriesIteratorReader leafAreaIndexReader	= getTimeseriesReader(inPathToLai, fId, startDate, endDate,timeStepMinutes);
         OmsTimeSeriesIteratorReader soilHeatFluxReader 	= getTimeseriesReader(inPathToSoilHeatFlux, fId, startDate, endDate,timeStepMinutes);
+        OmsTimeSeriesIteratorReader netRadReader 	= getTimeseriesReader(inPathToNetRad, fId, startDate, endDate,timeStepMinutes);
 
-		OmsShapefileFeatureReader centroidsReader 		= new OmsShapefileFeatureReader();
+        OmsShapefileFeatureReader centroidsReader 		= new OmsShapefileFeatureReader();
         centroidsReader.file = inPathToCentroids;
 		centroidsReader.readFeatureCollection();
 		SimpleFeatureCollection stationsFC = centroidsReader.geodata;
@@ -133,86 +135,138 @@ public class TestTranspiration{
 		sensibleShadowWriter.tTimestep = timeStepMinutes;
 		sensibleShadowWriter.fileNovalue="-9999";
 		
-		OmsTranspiration Transpiration = new OmsTranspiration();
-		Transpiration.inCentroids = stationsFC;
-		Transpiration.idCentroids="id";
-		Transpiration.centroidElevation="Elevation";
+		OmsTimeSeriesIteratorWriter evaporationWriter = new OmsTimeSeriesIteratorWriter();
+		evaporationWriter.file = outPathToSoilEvaporation;
+		evaporationWriter.tStart = startDate;
+		evaporationWriter.tTimestep = timeStepMinutes;
+		evaporationWriter.fileNovalue="-9999";
 		
-        Transpiration.inDem = digitalElevationModel; 
-        Transpiration.defaultStress = 1.0;
-        while(temperatureReader.doProcess ) {
+		OmsTimeSeriesIteratorWriter canopyWriter = new OmsTimeSeriesIteratorWriter();
+		canopyWriter.file = outPathToCanopy;
+		canopyWriter.tStart = startDate;
+		canopyWriter.tTimestep = timeStepMinutes;
+		canopyWriter.fileNovalue="-9999";
+		
+		OmsProspero Prospero= new OmsProspero();
+		Prospero.inCentroids = stationsFC;
+		Prospero.idCentroids="id";
+		Prospero.centroidElevation="Elevation";
+		
+		Prospero.inDem = digitalElevationModel; 
+
+
+		//Prospero.elevation = 1556;
+		//Prospero.latitude = 46.015966;
+		//Prospero.longitude = 11.045879;
+		Prospero.canopyHeight = 0.2;
+		Prospero.defaultStress = 1.0;
+		Prospero.doIterative = false;
+		
+		Prospero.useRadiationStress=true;
+		Prospero.useTemperatureStress=false;
+		Prospero.useVDPStress=false;
+		Prospero.useWaterStress=true;
+		
+		
+		Prospero.alpha = 0.005;
+		Prospero.theta = 0.9;
+		Prospero.VPD0 = 5.0;
+        	
+		Prospero.Tl = -5.0;
+		Prospero.T0 = 20.0;
+		Prospero.Th = 45.0;
+		Prospero.typeOfCanopy="multilayer";
+		Prospero.waterWiltingPoint = 0.15;
+		Prospero.waterFieldCapacity = 0.27; 
+		Prospero.rootsDepth = 0.75;
+		Prospero.depletionFraction = 0.55;        
+		
+		while(temperatureReader.doProcess ) {
         	temperatureReader.nextRecord();
+        	
+       		
 
             HashMap<Integer, double[]> id2ValueMap = temperatureReader.outData;
-            Transpiration.inAirTemperature = id2ValueMap;
-            Transpiration.doHourly = true;
-            Transpiration.doFullPrint = true;
-            Transpiration.typeOfTerrainCover = "FlatSurface";
-            Transpiration.tStartDate = startDate;
-            Transpiration.temporalStep = timeStepMinutes;
+            Prospero.inAirTemperature = id2ValueMap;
+            Prospero.doHourly = true;
+            Prospero.doFullPrint = true;
+           //Prospero.typeOfTerrainCover = "FlatSurface";
+            Prospero.tStartDate = startDate;
+            Prospero.temporalStep = timeStepMinutes;
 
             windReader.nextRecord();
             id2ValueMap = windReader.outData;
-            Transpiration.inWindVelocity = id2ValueMap;
+            Prospero.inWindVelocity = id2ValueMap;
 
             humidityReader.nextRecord();
             id2ValueMap = humidityReader.outData;
-            Transpiration.inRelativeHumidity = id2ValueMap;
+            Prospero.inRelativeHumidity = id2ValueMap;
 
             shortwaveReaderDirect.nextRecord();
             id2ValueMap = shortwaveReaderDirect.outData;
-            Transpiration.inShortWaveRadiationDirect = id2ValueMap;
+            Prospero.inShortWaveRadiationDirect = id2ValueMap;
             
             shortwaveReaderDiffuse.nextRecord();
             id2ValueMap = shortwaveReaderDiffuse.outData;
-            Transpiration.inShortWaveRadiationDiffuse = id2ValueMap;
+            Prospero.inShortWaveRadiationDiffuse = id2ValueMap;
             
             longwaveReader.nextRecord();
             id2ValueMap = longwaveReader.outData;
-            Transpiration.inLongWaveRadiation = id2ValueMap;
+            Prospero.inLongWaveRadiation = id2ValueMap;
             
             soilHeatFluxReader.nextRecord();
             id2ValueMap = soilHeatFluxReader.outData;
-            Transpiration.inSoilFlux = id2ValueMap;
+            Prospero.inSoilFlux = id2ValueMap;
             
             pressureReader.nextRecord();
             id2ValueMap = pressureReader.outData;
-            Transpiration.inAtmosphericPressure = id2ValueMap;
+            Prospero.inAtmosphericPressure = id2ValueMap;
             
             leafAreaIndexReader.nextRecord();
             id2ValueMap = leafAreaIndexReader.outData;
-            Transpiration.inLeafAreaIndex = id2ValueMap;
+            Prospero.inLeafAreaIndex = id2ValueMap;
             
-            Transpiration.pm = pm;
-            Transpiration.process();
+            netRadReader.nextRecord();
+            id2ValueMap = netRadReader.outData;
+            Prospero.inNetLongWaveRadiation = id2ValueMap;
+            
+           // inPathToNetRad
+            Prospero.pm = pm;
+            Prospero.process();
 
-            latentHeatSunWriter.inData = Transpiration.outLatentHeat;
+            latentHeatSunWriter.inData = Prospero.outLatentHeat;
             latentHeatSunWriter.writeNextLine();
 
-			latentHeatShadowWriter.inData = Transpiration.outLatentHeatShade;
+			latentHeatShadowWriter.inData = Prospero.outLatentHeatShade;
             latentHeatShadowWriter.writeNextLine();			 	
 
-			TranspirationWriter.inData = Transpiration.outTranspiration;
+			TranspirationWriter.inData = Prospero.outTranspiration;
 			TranspirationWriter.writeNextLine();			 	
 
-			if (Transpiration.doFullPrint == true) {
-			leafTemperatureSunWriter.inData = Transpiration.outLeafTemperature;
+			if (Prospero.doFullPrint == true) {
+			leafTemperatureSunWriter.inData = Prospero.outLeafTemperature;
 			leafTemperatureSunWriter.writeNextLine();			 	
 
-			leafTemperatureShadowWriter.inData = Transpiration.outLeafTemperatureShade;
+			leafTemperatureShadowWriter.inData = Prospero.outLeafTemperatureShade;
 			leafTemperatureShadowWriter.writeNextLine();			 	
 
-			radiationSunWriter.inData = Transpiration.outRadiation;
+			radiationSunWriter.inData = Prospero.outRadiation;
 			radiationSunWriter.writeNextLine();			 	
 
-			radiationShadowWriter.inData = Transpiration.outRadiationShade;
+			radiationShadowWriter.inData = Prospero.outRadiationShade;
 			radiationShadowWriter.writeNextLine();			 	
 			
-			sensibleSunWriter.inData = Transpiration.outSensibleHeat;
+			sensibleSunWriter.inData = Prospero.outSensibleHeat;
 			sensibleSunWriter.writeNextLine();			 	
 			
-			sensibleShadowWriter.inData = Transpiration.outSensibleHeatShade;
-			sensibleShadowWriter.writeNextLine();			 	
+			sensibleShadowWriter.inData = Prospero.outSensibleHeatShade;
+			sensibleShadowWriter.writeNextLine();	
+			
+			evaporationWriter.inData = Prospero.outEvaporation;
+			evaporationWriter.writeNextLine();
+			
+			canopyWriter.inData = Prospero.outCanopy;
+			canopyWriter.writeNextLine();
 			}
 	        }
        
@@ -225,7 +279,7 @@ public class TestTranspiration{
         soilHeatFluxReader.close();
         pressureReader.close();
         leafAreaIndexReader.close();
-        
+                
         latentHeatSunWriter.close();
 		latentHeatShadowWriter.close();
 		TranspirationWriter.close();
@@ -235,6 +289,9 @@ public class TestTranspiration{
 		radiationShadowWriter.close();
 		sensibleSunWriter.close();
 		sensibleShadowWriter.close();
+		evaporationWriter.close();
+		canopyWriter.close();
+
 
     }
 

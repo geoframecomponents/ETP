@@ -1,4 +1,4 @@
-package etpClasses;
+package prosperoClasses;
 
 import static java.lang.Math.pow;
 import static java.lang.Math.exp;
@@ -6,7 +6,7 @@ import static java.lang.Math.exp;
 public class RadiationMethod {
 	double diffuseExtinctionCoefficient = 0.719;
 	
-	double leafScatteringCoefficient = 0.15;
+	double leafScatteringCoefficient = 0.2;
 	double canopyReflectionCoefficientDiffuse = 0.036;
 	
 	public double computeLongWaveRadiationBalance(double leafSide, double longWaveEmittance, double airTemperature, double leafTemperature, double stefanBoltzmannConstant) {
@@ -18,29 +18,18 @@ public class RadiationMethod {
 	public double computeAbsordebRadiationSunlit (double leafAreaIndex, double solarElevationAngle, double shortWaveRadiationDirect,double shortWaveRadiationDiffuse) {
     	
     	double directExtinctionCoefficientInCanopy = 0.5/solarElevationAngle;
-    	//System.out.println("directExtinctionCoefficientInCanopy		"+directExtinctionCoefficientInCanopy);
 		double scatteredExtinctionCoefficient = 0.46/solarElevationAngle;
-    	//System.out.println("scatteredExtinctionCoefficient		"+scatteredExtinctionCoefficient);
-
 		double canopyReflectionCoefficientBeam = 1-exp((-2*0.041*directExtinctionCoefficientInCanopy)/(1+directExtinctionCoefficientInCanopy));
-    	//System.out.println("canopyReflectionCoefficientBeam		"+canopyReflectionCoefficientBeam);
-
 	    double directAbsorbedRadiation = shortWaveRadiationDirect*(1-leafScatteringCoefficient)*(1-exp(-directExtinctionCoefficientInCanopy*leafAreaIndex));
-    	//System.out.println("directAbsorbedRadiation				"+directAbsorbedRadiation);
-
 	    double diffuseAbsorbedRadiation = shortWaveRadiationDiffuse*(1-canopyReflectionCoefficientDiffuse)*
 	    		(1-exp(-(diffuseExtinctionCoefficient+directExtinctionCoefficientInCanopy)*leafAreaIndex))*
 	    		(diffuseExtinctionCoefficient/(diffuseExtinctionCoefficient+directExtinctionCoefficientInCanopy));
-    	//System.out.println("diffuseAbsorbedRadiation			"+diffuseAbsorbedRadiation);
-
 	    double scatteredAbsorbedRadiation = shortWaveRadiationDirect*((1-canopyReflectionCoefficientBeam)*
 	    		(1-exp(-(directExtinctionCoefficientInCanopy+scatteredExtinctionCoefficient)*leafAreaIndex))*
 	    		(scatteredExtinctionCoefficient/(directExtinctionCoefficientInCanopy+scatteredExtinctionCoefficient))-
 	    		(1-leafScatteringCoefficient)*(1-exp(-2*directExtinctionCoefficientInCanopy*leafAreaIndex))/2);
-    	//System.out.println("scatteredAbsorbedRadiation			"+scatteredAbsorbedRadiation);
 
 	    double absordebRadiationSunlit = directAbsorbedRadiation + diffuseAbsorbedRadiation + scatteredAbsorbedRadiation;
-    	//System.out.println("absordebRadiationSunlit			"+diffuseAbsorbedRadiation);
 
 	    return absordebRadiationSunlit;
 	    }
@@ -59,9 +48,15 @@ public class RadiationMethod {
 		double absordebRadiationShadow = scatteredAbsorbedRadiationShadow + diffuseAbsorbedRadiationShadow;
 	    return absordebRadiationShadow;
 	    }	
-	public double computeSunlitLeafAreaIndex (double leafAreaIndex, double solarElevationAngle) {
-    	double directExtinctionCoefficientInCanopy = 0.5/solarElevationAngle;
-    	double sunlitLeafAreaIndex = (1-exp(-directExtinctionCoefficientInCanopy*leafAreaIndex))/directExtinctionCoefficientInCanopy;
-    	return sunlitLeafAreaIndex;
+	public double computeSunlitLeafAreaIndex (String typeOfCanopy, double leafAreaIndex, double solarElevationAngle) {
+		if ("grassland".equals(typeOfCanopy)) {
+			double sunlitLeafAreaIndex = leafAreaIndex;
+			return sunlitLeafAreaIndex;
+			}
+		else {
+			double directExtinctionCoefficientInCanopy = 0.5/solarElevationAngle;		
+			double sunlitLeafAreaIndex = (1-exp(-directExtinctionCoefficientInCanopy*leafAreaIndex))/directExtinctionCoefficientInCanopy;
+			return sunlitLeafAreaIndex;
+		}
 	}
 }

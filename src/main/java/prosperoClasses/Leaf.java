@@ -1,11 +1,11 @@
-package etpClasses;
+package prosperoClasses;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.pow;
 
 public class Leaf {
 	
-	public double length = 1;
+	public double length = 0.25;
 	public int side = 2;
 	public int stomaSide = 1;
 
@@ -23,6 +23,6 @@ public class Leaf {
 	public double longWaveAbsorption = 0.8;	
 	public double longWaveReflectance = 0.2;	
 	public double longWaveTransmittance = 0;
-	public double longWaveEmittance = 1;
+	public double longWaveEmittance = 0.95;
 
 }

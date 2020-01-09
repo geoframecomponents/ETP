@@ -1,4 +1,4 @@
-package etpClasses;
+package prosperoClasses;
 import static java.lang.Math.PI;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;

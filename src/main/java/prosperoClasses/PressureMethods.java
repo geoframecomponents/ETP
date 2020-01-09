@@ -1,4 +1,4 @@
-package etpClasses;
+package prosperoClasses;
 
 import static java.lang.Math.exp;
 import static java.lang.Math.pow;
@@ -26,5 +26,18 @@ public class PressureMethods {
 		double pressure = defaultAtmosphericPressure * exponential;
 		return pressure;
 	}
-
+	public double computeVaporPressure (double relativeHumidity, double saturationVaporPressure) {
+		double vaporPressure = relativeHumidity * saturationVaporPressure/100.0;
+		return vaporPressure;
+	}
+	
+	public double computeVapourPressureDewPoint(double airTemperature) {
+		double t = 1-(373.15/(airTemperature));// - (100-(relativeHumidity*100))/5;
+		double expo = Math.exp(13.3185 * t - 1.976 * Math.pow(t,2) - 0.6445 * Math.pow(t,3) - 0.1229 * Math.pow(t,4));
+		return expo;
+	}
+	public double computeVapourPressureDeficit(double vaporPressure, double vaporPressureDew) {
+		double vapourPressureDeficit = (vaporPressure - vaporPressureDew)/1000;
+		return vapourPressureDeficit;
+	}
 }

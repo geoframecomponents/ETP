@@ -23,20 +23,20 @@ public class TestPenmanMonteithFAO{
 	
 	@Test
     public void Test() throws Exception {
-		String startDate= "2015-07-21 00:00";
-        String endDate	= "2015-07-21 23:00";
-        int timeStepMinutes = 60;
+		String startDate= "2012-07-15 10:30";
+        String endDate	= "2012-07-15 11:30";
+        int timeStepMinutes = 30;
         String fId = "val";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
 
-        String inPathToTemperature 			="resources/Input/dataET_point/AirTemperature.csv";
-        String inPathToWind 				="resources/Input/dataET_point/WindVelocity.csv";
-        String inPathToRelativeHumidity 	="resources/Input/dataET_point/RelativeHumidity.csv";
-        String inPathToNetRad 				="resources/Input/dataET_point/NetRadiation.csv";
-        String inPathToPressure 			="resources/Input/dataET_point/AtmosphericPressure.csv";
-        String inPathToSoilHeatFlux 		="resources/Input/dataET_point/SoilHeatFlux.csv";
-        String inPathToSoilMosture 			="resources/Input/dataET_point/SoilMosture.csv";
+        String inPathToTemperature 			="resources/Input/dataET_point/Viote/Viote_Temp.csv";
+        String inPathToWind 				="resources/Input/dataET_point/Viote/Viote_Wind.csv";
+        String inPathToRelativeHumidity 	="resources/Input/dataET_point/Viote/Viote_RH.csv";
+        String inPathToNetRad 				="resources/Input/dataET_point/Viote/Viote_Net.csv";
+        String inPathToPressure 			="resources/Input/dataET_point/Viote/Viote_Pres.csv";
+        String inPathToSoilHeatFlux 		="resources/Input/dataET_point/Viote/Viote_GHF.csv";
+        String inPathToSoilMosture 			="resources/Input/dataET_point/Viote/Viote_null.csv";
 
         String pathToEvapotranspirationFAO	="resources/Output/evapotranspirationFAO.csv";
         String pathToLatentHeatFAO			="resources/Output/LatentHeatFAO.csv";

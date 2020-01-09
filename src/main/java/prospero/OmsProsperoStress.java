@@ -1,4 +1,4 @@
-package etpPointCase;
+package prospero;
 
 //import static java.lang.Math.pow;
 //import static org.jgrasstools.gears.libs.modules.JGTConstants.isNovalue;
@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
-
+import java.lang.Math;
 import oms3.annotations.Author;
 import oms3.annotations.Description;
 import oms3.annotations.Execute;
@@ -24,6 +24,7 @@ import oms3.annotations.Name;
 import oms3.annotations.Out;
 import oms3.annotations.Status;
 import oms3.annotations.Unit;
+import prosperoClasses.*;
 
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -45,11 +46,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 //import com.vividsolutions.jts.geom.Point;
-
-
-//import etpPointCase.*;
-import etpClasses.*;
-//import etpSurfaces.*;
 
 /*
 * This file is part of JGrasstools (http://www.jgrasstools.org)
@@ -76,7 +72,7 @@ import etpClasses.*;
 @Status(Status.CERTIFIED)
 @License("General Public License Version 3 (GPLv3)")
 
-public class OmsResistance extends JGTModel implements Parameters{
+public class OmsProsperoStress extends JGTModel implements Parameters{
 
 	
 	/////////////////////////////////////////////
@@ -183,11 +179,11 @@ public class OmsResistance extends JGTModel implements Parameters{
 	
 	@In	public double alpha;
 	@In public double theta;
-	@In public double d;
-	@In public double e;
+	//@In public double d;
+	@In public double VPD0;
 
 	@In	public double T0;
-	@In public double T1;
+	@In public double Tl;
 	@In public double Th;
 	
 	//@In	public double b5;
@@ -207,8 +203,8 @@ public class OmsResistance extends JGTModel implements Parameters{
 	@Description("The total stress.")
 	@Unit("-")
 	@Out
-	public HashMap<Integer, double[]> outStressResistance;
-	
+//	public HashMap<Integer, double[]> outStressResistance;
+	public HashMap<Integer, double[]> outStressResistance= new HashMap<Integer, double[]>() ;
 	
 	/////////////////////////////////////////////
 	// OTHERS - DO
@@ -229,28 +225,34 @@ public class OmsResistance extends JGTModel implements Parameters{
 	@Description("The elevation of the centroid.")
 	@In
 	@Unit("m")
-	public String centroidElevation;
+	public double elevation;
+	
+	@Out
+	double outStress;
 
 	@Execute
 	public void process() throws Exception {		
 		outStressResistance = new HashMap<Integer, double[]>();
-		stationCoordinates = getCoordinate(0,inCentroids, idCentroids);
-		Iterator<Integer> idIterator = stationCoordinates.keySet().iterator();
+		//stationCoordinates = getCoordinate(0,inCentroids, idCentroids);
+		//Iterator<Integer> idIterator = stationCoordinates.keySet().iterator();
 		
 		Set<Entry<Integer, double[]>> entrySet = inAirTemperature.entrySet();
 		for( Entry<Integer, double[]> entry : entrySet ) {
 			Integer basinId = entry.getKey();
-			Coordinate coordinate = (Coordinate) stationCoordinates.get(idIterator.next());
-			double elevation = coordinate.z;
+		//	Coordinate coordinate = (Coordinate) stationCoordinates.get(idIterator.next());
+			//double elevation = coordinate.z;
 						
 			double airTemperature = inAirTemperature.get(basinId)[0];
-			if (airTemperature == (nullValue)) {airTemperature = defaultAirTemperature;}		
+			if (airTemperature == (nullValue)) {airTemperature = defaultAirTemperature;}
+			if (airTemperature > 200) {airTemperature = airTemperature-273;}		
+
 				
 			double shortWaveRadiationDirect = inShortWaveRadiationDirect.get(basinId)[0];
 			if (shortWaveRadiationDirect == nullValue) {shortWaveRadiationDirect = defaultShortWaveRadiationDirect;}
 			
-			double soilMosture = inSoilMosture.get(basinId)[0];
-			if (soilMosture == nullValue) {soilMosture = defaultSoilMosture;}
+			double soilMosture = defaultSoilMosture;
+			if (inSoilMosture != null){soilMosture = inSoilMosture.get(basinId)[0];}
+			if (soilMosture == (nullValue)) {soilMosture = defaultSoilMosture;}
 			
 			double relativeHumidity = defaultRelativeHumidity;
 			if (inRelativeHumidity != null){relativeHumidity = inRelativeHumidity.get(basinId)[0];}
@@ -263,42 +265,45 @@ public class OmsResistance extends JGTModel implements Parameters{
 			if (atmosphericPressure == nullValue) {atmosphericPressure = pressure.computePressure(defaultAtmosphericPressure, massAirMolecule, gravityConstant, elevation,boltzmannConstant, airTemperature);;}			
 		
 			double saturationVaporPressure = pressure.computeSaturationVaporPressure(airTemperature+273, waterMolarMass, latentHeatEvaporation, molarGasConstant);			
-			double vaporPressure = relativeHumidity * saturationVaporPressure/100.0;		
-			double vapourPressureDeficit = (saturationVaporPressure - vaporPressure)/1000;
+			double vaporPressure = relativeHumidity * saturationVaporPressure/100.0;
+			double vaporPressureDew = computeVapourPressureDewPoint(airTemperature);		
+			double vapourPressureDeficit = (vaporPressure - vaporPressureDew)/1000;
 			double shortWaveRadiationMicroMol=(shortWaveRadiationDirect>0)?shortWaveRadiationDirect/2.11:0;
 
 			double radiationStress = computeRadiationStress(shortWaveRadiationMicroMol, alpha, theta);//, b10);
-			double c = (Th-T0)/(T0-T1);
-			double b = 1/((T0-T1)*Math.pow((Th-T0),c));
-			double temperatureStress = computeTemperatureStress(airTemperature, b, c, T1,  Th);
-			double vapourPressureStress = computeVapourPressureStress(vapourPressureDeficit,d,e);
+			double c = (Th-T0)/(T0-Tl);
+			double b = 1/((T0-Tl)*Math.pow((Th-T0),c));
+			double dewPointTemperature  = computeDewPointTemperature(airTemperature, relativeHumidity);
+			double temperatureStress = computeTemperatureStress(airTemperature, b, c, Tl,  Th);
+			double vapourPressureStress = computeVapourPressureStress(vapourPressureDeficit,VPD0);
 			double waterStress = computeWaterStress(soilMosture, f, thetaW, thetaC);
-
-			double outStressResistance = radiationStress* waterStress;// * temperatureStress * vapourPressureStress ;
-		/*	System.out.println("1 is:   "+radiationStress);	
-			System.out.println("2 is:   "+temperatureStress);	
-			System.out.println("3 is:   "+vapourPressureStress);	
-			System.out.println("4 is:   "+waterStress);	*/
-
-			storeResult((Integer)basinId,outStressResistance);
+			
+		
+			outStress = radiationStress * waterStress;// * temperatureStress * vapourPressureStress ;
+			storeResult((Integer)basinId,outStress);
 			
 			}
 		}
 
 	
 	private double computeRadiationStress(double shortWaveRadiationMicroMol, double alpha, double theta) {
-		double sqr = Math.pow((alpha*shortWaveRadiationMicroMol+1), 2) - 4*theta*alpha*shortWaveRadiationMicroMol;
-		double result = (1/(2*theta))*(alpha*shortWaveRadiationMicroMol+1-Math.sqrt(Math.pow(sqr, 2)));
+		double first = (alpha*shortWaveRadiationMicroMol)+1;
+		double sqr1 = Math.pow(first, 2);
+		double sqr2 = - 4*theta*alpha*shortWaveRadiationMicroMol;
+		double sqr = sqr1+sqr2;
+		double result = (1/(2*theta))*(alpha*shortWaveRadiationMicroMol+1-Math.sqrt((sqr))) ;
 		return result;	
 	}
 	
-	private double computeTemperatureStress(double airTemperature, double b, double c, double T1, double Th) {
-		double result = b* (airTemperature - T1)* Math.pow((Th-airTemperature),c);
+	private double computeTemperatureStress(double airTemperature, double b, double c, double Tl, double Th) {
+		double result = b* (airTemperature - Tl)* Math.pow((Th-airTemperature),c);
+		//System.out.println("the second result    "+result);
+
 		return result;	
 	}
 	
-	private double computeVapourPressureStress(double vapourPressureDeficit, double d, double e) {
-		double result = d*Math.exp(-e*vapourPressureDeficit);
+	private double computeVapourPressureStress(double vapourPressureDeficit, double VPD0) {
+		double result = Math.exp(-vapourPressureDeficit/VPD0);
 		return result;	
 	}
 	private double computeWaterStress(double soilMosture, double b6, double thetaW, double thetaC) {
@@ -316,6 +321,15 @@ public class OmsResistance extends JGTModel implements Parameters{
 		//System.out.println("Beta is:   "+beta);	
 		return result;	
 	}
+	private double computeDewPointTemperature(double airTemperature, double relativeHumidity) {
+		double dewPointTemperature = airTemperature - (100-(relativeHumidity*100))/5;
+		return dewPointTemperature;
+	}
+	private double computeVapourPressureDewPoint(double airTemperature) {
+		double t = 1-(373.15/(airTemperature+273.15));// - (100-(relativeHumidity*100))/5;
+		double expo = Math.exp(13.3185 * t - 1.976 * Math.pow(t,2) - 0.6445 * Math.pow(t,3) - 0.1229 * Math.pow(t,4));
+		return expo;
+	}
 	
 	
 	private void storeResult(int ID,double output) //, double latentHeatShadow,double totalTranspiration) 
@@ -331,7 +345,7 @@ public class OmsResistance extends JGTModel implements Parameters{
 		CrsUtilities.reproject(sourceCRS, targetCRS, point);
 		return point;
 	}*/
-	private LinkedHashMap<Integer, Coordinate> getCoordinate(int nStaz,
+	/*private LinkedHashMap<Integer, Coordinate> getCoordinate(int nStaz,
 			SimpleFeatureCollection collection, String idField)
 					throws Exception {
 		LinkedHashMap<Integer, Coordinate> id2CoordinatesMcovarianceMatrix = new LinkedHashMap<Integer, Coordinate>();
@@ -361,7 +375,7 @@ public class OmsResistance extends JGTModel implements Parameters{
 		}
 
 		return id2CoordinatesMcovarianceMatrix;
-	}
+	}*/
 		
 }
 
