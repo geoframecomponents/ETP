@@ -22,34 +22,36 @@ import prospero.OmsProspero;
 public class prosperoTest{
 	@Test
     public void Test() throws Exception {
-		String startDate= "2012-07-15 00:30";
-        String endDate	= "2012-07-15 23:30";
-        int timeStepMinutes = 30;
-        String fId = "val";
+		String startDate= "2013-12-15 10:00";
+        String endDate	= "2014-12-31 00:00";
+        int timeStepMinutes = 60;
+        String fId = "ID";
 
         PrintStreamProgressMonitor pm = new PrintStreamProgressMonitor(System.out, System.out);
         
+        String pathToInput 				= "/home/drugo/Downloads/WinterETP/data/Cavone_modificato_dati_Michele/1_origin/";
+        String basin = "Cavone";
         OmsRasterReader DEMreader = new OmsRasterReader();
-		DEMreader.file = "resources/Input/dataET_raster/dem.tif";
+		DEMreader.file =  pathToInput + "dem_1.asc";
 		DEMreader.fileNovalue = -9999.0;
 		DEMreader.geodataNovalue = Double.NaN;
 		DEMreader.process();
 		GridCoverage2D digitalElevationModel = DEMreader.outRaster;
-              
-        String inPathToTemperature 		="resources/Input/dataET_point/Viote/Viote_Temp.csv";
-        String inPathToWind 			="resources/Input/dataET_point/Viote/Viote_Wind.csv";
-        String inPathToRelativeHumidity ="resources/Input/dataET_point/Viote/Viote_RH.csv";
-        String inPathToShortWaveRadiationDirect="resources/Input/dataET_point/Viote/Viote_SwDirect.csv";
-        String inPathToShortWaveRadiationDiffuse="resources/Input/dataET_point/Viote/Viote_null.csv";
-        String inPathToLWRad 			="resources/Input/dataET_point/Viote/Viote_null.csv";
-        String inPathToNetRad 			="resources/Input/dataET_point/Viote/Viote_Net.csv";
+		
+        String inPathToTemperature 		= pathToInput + "airT_1.csv";
+        String inPathToWind 			= pathToInput + basin +"_Wind_1.csv";
+        String inPathToRelativeHumidity = pathToInput + basin +"_RH_1.csv";
+        String inPathToShortWaveRadiationDirect= pathToInput + basin +"_SwDirect_1.csv";
+        String inPathToShortWaveRadiationDiffuse= pathToInput + basin +"_null.csv";
+        String inPathToLWRad 			= pathToInput + basin +"_null.csv";
+        String inPathToNetRad 			= pathToInput + basin +"_Net_1.csv";
 
-        String inPathToSoilHeatFlux 	="resources/Input/dataET_point/Viote/Viote_GHF.csv";
+        String inPathToSoilHeatFlux 	= pathToInput + basin +"_GHF_1.csv";
 
 
-        String inPathToPressure 		="resources/Input/dataET_point/Viote/Viote_Pres.csv";
-        String inPathToLai 				="resources/Input/dataET_point/Viote/Viote_Lai.csv";
-        String inPathToCentroids 		="resources/Input/dataET_point/CentroidDem.shp";
+        String inPathToPressure 		= pathToInput + basin +"_Pres_1.csv";
+        String inPathToLai 				= pathToInput + "LAI_1.csv";
+        String inPathToCentroids 		= pathToInput + "centroids_ID_1.shp";
 
         
         String outPathToLatentHeatSun			="resources/Output/LatentHeatSun.csv";
@@ -149,8 +151,8 @@ public class prosperoTest{
 		
 		OmsProspero Prospero= new OmsProspero();
 		Prospero.inCentroids = stationsFC;
-		Prospero.idCentroids="id";
-		Prospero.centroidElevation="Elevation";
+		Prospero.idCentroids="ID";
+		Prospero.centroidElevation="pitfiller_";
 		
 		Prospero.inDem = digitalElevationModel; 
 

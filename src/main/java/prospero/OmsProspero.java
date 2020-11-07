@@ -775,7 +775,5 @@ public class OmsProspero extends JGTModel implements Parameters {
 		Point[] point = new Point[] { GeometryUtilities.gf().createPoint(coordinate) };
 		CrsUtilities.reproject(sourceCRS, targetCRS, point);
 		return point;
-	}
-	
-		
+	}		
 }
