@@ -21,7 +21,7 @@ public class Leaf {
 	public double shortWaveTransmittance = 0;
 	
 	public double longWaveAbsorption = 0.8;	
-	public double longWaveReflectance = 0.2;	
+	public double longWaveReflectance = 0.2;	  
 	public double longWaveTransmittance = 0;
 	public double longWaveEmittance = 0.95;
 
