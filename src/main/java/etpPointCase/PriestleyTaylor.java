@@ -35,41 +35,30 @@ import oms3.annotations.Unit;
 @License("General Public License Version 3 (GPLv3)")
 //abstract
 //public abstract class PriestleyTaylor implements Evapotranspiration{
-class PriestleyTaylor implements Evapotranspiration{
+class PriestleyTaylor{
+	private double alpha;
+	private double airTemperature;
+	private double atmosphericPressure;
+	private double netRadiation;
+	private double soilHeatFlux;
 	
-	@Description("The Priestley-Taylor alpha parameter.")
-	@In
-	@Unit("-")
-	public double alpha;
-
-	@Description("The mean hourly air temperature.")
-	@In
-	@Unit("C")
-	public int airTemperature;
-	
-	@Description("The atmospheric pressure in kPa.")
-	@In
-	@Unit("KPa")
-	public double atmosphericPressure;
-
-	@Description("The net Radiation at the grass surface in W/m2 for the current hour.")
-	@In
-	@Unit("MJ m-2 hour-1")
-	public double netRadiation;
-	
-	@Description("The soil heat flux.")
-	@In
-	@Unit("W m-2")
-	public double soilHeatFlux;
-
-
-	public int doET( ) {
+	public void setNumber(double alpha, double airTemperature, double atmosphericPressure,
+			double netRadiation, double soilHeatFlux) {
+		this.alpha = alpha;
+		this.airTemperature=airTemperature;
+		this.atmosphericPressure=atmosphericPressure;
+		this.netRadiation=netRadiation;
+		this.soilHeatFlux=soilHeatFlux;
+		}
+	public double doET( ) {
 		double denDelta = Math.pow((airTemperature + 237.3), 2);
 		double expDelta = (17.27 * airTemperature) / (airTemperature + 237.3);
 		double numDelta = 4098 * (0.6108 * Math.exp(expDelta));
-        double delta = numDelta / denDelta;
-        double psychrometricConstant = 0.665 * 0.001 * atmosphericPressure;
+		double delta = numDelta / denDelta;
+		double psychrometricConstant = 0.665 * 0.001 * atmosphericPressure;
 		double result = ((alpha/2.45) * delta * (netRadiation - soilHeatFlux)) / (psychrometricConstant + delta); //* (1E6)/86400;
-		return (int) result;  // -----> [mm/day]
+		return result;  // -----> [mm/day]
 		}
-}
+	}
+	
+

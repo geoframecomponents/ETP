@@ -51,16 +51,20 @@ import com.vividsolutions.jts.geom.Coordinate;
 @License("General Public License Version 3 (GPLv3)")
 
 public class PTComponent{
-	
-//	public static void main(String[] args) {
-	PriestleyTaylor PT = new PriestleyTaylor();
-	
+	public static void main(String[] args) {
 
-		ContextET context=new ContextET();
-		context() {PT
-		}
-//		context(PriestleyTaylor);
-		
-//		System.out.println("10 + 5 = " + context.execute_Evapotranspiration());
-//	}
+	double alpha=1.26;
+	double airTemperature=280;
+	double atmosphericPressure=10;
+	double netRadiation=100;
+	double soilHeatFlux=10;
+	
+	
+	PriestleyTaylor PT = new PriestleyTaylor();
+	PT.setNumber(alpha, airTemperature, atmosphericPressure, netRadiation, soilHeatFlux);
+	double petp = PT.doET();
+	System.out.println(petp);
+
+	
+	}
 }
