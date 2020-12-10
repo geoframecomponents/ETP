@@ -16,31 +16,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package etpPointCase;
-import static java.lang.Math.pow;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
-import java.util.Set;
+//import static java.lang.Math.pow;
+//import java.util.HashMap;
+//import java.util.LinkedHashMap;
+//import java.util.Map.Entry;
+//import java.util.Set;
 
 import oms3.annotations.Author;
 import oms3.annotations.Description;
-import oms3.annotations.Execute;
-import oms3.annotations.In;
+//import oms3.annotations.Execute;
+//import oms3.annotations.In;
 import oms3.annotations.Keywords;
 import oms3.annotations.Label;
 import oms3.annotations.License;
 import oms3.annotations.Name;
-import oms3.annotations.Out;
+//import oms3.annotations.Out;
 import oms3.annotations.Status;
-import oms3.annotations.Unit;
+//import oms3.annotations.Unit;
 
 
-import org.jgrasstools.gears.libs.modules.JGTConstants;
-import org.jgrasstools.gears.libs.modules.JGTModel;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
+//import org.jgrasstools.gears.libs.modules.JGTConstants;
+//import org.jgrasstools.gears.libs.modules.JGTModel;
+//import org.joda.time.DateTime;
+//import org.joda.time.format.DateTimeFormatter;
 
-import com.vividsolutions.jts.geom.Coordinate;
+//import com.vividsolutions.jts.geom.Coordinate;
 
 @Description("Calculate evapotraspiration based on the Priestley Taylor model")
 @Author(name = "Giuseppe Formetta, Silvia Franceschi and Andrea Antonello", contact = "maryban@hotmail.it")

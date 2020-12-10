@@ -36,7 +36,7 @@ import oms3.annotations.Status;
 import oms3.annotations.Unit;
 
 import org.jgrasstools.gears.libs.modules.JGTConstants;
-import org.jgrasstools.gears.libs.modules.JGTModel;
+//import org.jgrasstools.gears.libs.modules.JGTModel;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -50,7 +50,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 @Status(Status.CERTIFIED)
 @License("General Public License Version 3 (GPLv3)")
 
-public class OmsPriestleyTaylor extends JGTModel {
+public class OmsPriestleyTaylor{// extends JGTModel {
 
 	@Description("Switch that defines if it is hourly.")
 	@In

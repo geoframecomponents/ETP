@@ -1,15 +1,16 @@
-
 package etpTestPointCase;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
+
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader;
 import org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter;
 import org.jgrasstools.gears.libs.monitor.PrintStreamProgressMonitor;
-
-import org.junit.*;
+import org.junit.Test;
 
 import etpPointCase.OmsPriestleyTaylor;
+//import gnu.jel.reflect.Integer;
+//import gnu.jel.reflect.String;
 
 /**
  * Test PrestleyTaylorModel.
@@ -76,7 +77,7 @@ public class TestPriestleyTaylor{
             id2ValueMap = soilHeatFluxReader.outData;
             PtEt.inSoilFlux = id2ValueMap;
             
-            PtEt.pm = pm;
+            //PtEt.pm = pm;
             PtEt.process();
             HashMap<Integer, double[]> outLatentHeat = PtEt.outLatentHeatPt;
             writerLatentHeatPT.inData = outLatentHeat;
