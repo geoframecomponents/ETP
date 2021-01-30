@@ -105,7 +105,7 @@ public class TestPenmanMonteithFAO{
             id2ValueMap = soilHeatFluxReader.outData;
             PmFAO.inSoilFlux = id2ValueMap;
 
-            PmFAO.pm = pm;
+//            PmFAO.pm = pm;
             PmFAO.process();
             
             OmsTimeSeriesIteratorWriter writerLAtentHeatFAO = new OmsTimeSeriesIteratorWriter();
